@@ -180,19 +180,19 @@ The MVP is planned as a four-week delivery across four sprints:
 
 | Sprint | Theme | Primary Outcome |
 | --- | --- | --- |
-| 1 | Foundation & Auth | Core data model, auth system, frontend shell, protected routing |
-| 2 | Job Listings | Employer CRUD, public listings, search, filtering, pagination |
-| 3 | Applications, Profiles & File Uploads | Candidate profile, resume upload, application flow, employer review |
-| 4 | Admin Panel, Real-time & Polish | Moderation panel, Reverb integration, QA, accessibility, regression coverage |
+| 1 | Slice Foundations | Auth and platform shell, core jobs and application models, first shared UI and layout groundwork |
+| 2 | Contracts & Feature Surfaces | Auth completion, public discovery, employer CRUD, and candidate-profile contract completion |
+| 3 | Candidate Lifecycle & Decision Flows | Apply flow, uploads, employer review, shared UI, and admin groundwork |
+| 4 | Governance, Real-time & Regression | Moderation, Reverb, branding uploads, QA, and regression coverage |
 
 ## Team Ownership
 
 | Developer | Ownership |
 | --- | --- |
-| B1 | Core backend domains: auth, user profiles, job write flows, applications, file services |
-| B2 | Backend platform domains: public search, admin moderation, queues, cache, Reverb, route organization |
-| F1 | Frontend foundation: auth, public jobs, shared UI, public UX polish |
-| F2 | Dashboard experiences: employer, candidate, admin, uploads, real-time UI integration |
+| D1 | Identity and platform shell: auth API, route and bootstrap plumbing, shared Vue shell, protected layouts, and shared UI foundations |
+| D2 | Jobs discovery and governance: taxonomy and listing core, public search and discovery, cache behavior, admin moderation, and platform activity |
+| D3 | Employer operations and live status: employer job endpoints, employer dashboard UX, employer review and decisions, and Reverb broadcast or client integration |
+| D4 | Candidate lifecycle and file pipeline: candidate profile, resumes, applications, upload processing, notification persistence, and branding-upload contracts |
 
 Detailed assignment is documented in [docs/tasks.md](./docs/tasks.md).
 
@@ -219,17 +219,17 @@ The implementation must follow these project rules:
 
 The backend will be organized around these API domains:
 
-- `auth`
-- `jobs`
-- `candidate/profile`
-- `candidate/resumes`
-- `candidate/applications`
-- `employer/profile`
-- `employer/jobs`
-- `employer/applications`
-- `admin/jobs`
-- `admin/activity`
-- `broadcasting`
+- `auth` — D1
+- `jobs` — D2 public read/search core, D3 employer write surface
+- `candidate/profile` — D4
+- `candidate/resumes` — D4
+- `candidate/applications` — D4
+- `employer/profile` — D4
+- `employer/jobs` — D3
+- `employer/applications` — D3
+- `admin/jobs` — D2
+- `admin/activity` — D2
+- `broadcasting` — D3
 
 ## Non-Functional Targets
 
@@ -248,7 +248,7 @@ When development starts, the recommended order is:
 2. Create the `client/` Vue application.
 3. Add root-level environment examples and developer setup instructions.
 4. Configure local database, queue, storage, and Reverb services.
-5. Implement Sprint 1 auth foundations first.
+5. Start Sprint 1 slice foundations in parallel: D1 auth and shell, D2 jobs core, D3 employer groundwork, and D4 candidate or application groundwork.
 6. Freeze API contracts by domain as defined in [docs/tasks.md](./docs/tasks.md).
 7. Add CI once both applications can build and test independently.
 
@@ -278,4 +278,4 @@ The next practical step is to scaffold the monorepo implementation structure:
 - `client/` for Vue SPA
 - root environment and orchestration files
 
-After that, Sprint 1 can begin directly from the contracts already defined in `docs/`.
+After that, the vertical-slice sprint work can begin directly from the contracts defined in `docs/`.

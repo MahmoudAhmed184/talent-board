@@ -1,101 +1,89 @@
 ## Job Board — Detailed Project Plan
 
-### Sprint 1 — Foundation & Auth
-**Goal:** Establish the project skeleton, core data model, and working role-aware authentication across the API and SPA.
+This plan is organized around four vertical slices so each developer owns a coherent domain with minimal cross-slice blocking:
 
-**Backend deliverables:**
-- [ ] `[B1]` Create `User`, `CandidateProfile`, and `EmployerProfile` models, migrations, and seed data using PHP Attributes.
-- [ ] `[B1]` Implement `UserRepository`, `AuthService`, `RegisterRequest`, `LoginRequest`, `AuthController`, and auth resources.
-- [ ] `[B1]` Add `UserPolicy` and ownership or role authorization tests for auth entry points.
-- [ ] `[B2]` Organize `/api/v1` routes, middleware groups, and `AppServiceProvider` repository bindings.
-- [ ] `[B2]` Register `PreventRequestForgery`, Sanctum support plumbing, and shared factories for auth-related entities.
+- `D1` — Identity and platform shell
+- `D2` — Jobs discovery and governance
+- `D3` — Employer operations and live status
+- `D4` — Candidate lifecycle and file pipeline
 
-**Frontend deliverables:**
-- [ ] `[F1]` Scaffold the Vue `3.5.33` + TypeScript + Vite `8` application with Vue Router `5.0.6` file-based routing and Pinia `3`.
-- [ ] `[F1]` Build `http.ts`, `useAuthStore`, `useAuth`, `AuthLayout.vue`, and login or register pages.
-- [ ] `[F1]` Add baseline shared UI primitives needed by auth forms.
-- [ ] `[F2]` Create `_parent.vue` layout shells for candidate, employer, and admin route groups.
-- [ ] `[F2]` Add shared toast and pagination infrastructure that later sprints can reuse.
+Detailed task-level ownership lives in [docs/tasks.md](./tasks.md).
 
-**Definition of Done:**
-- Auth-related migrations run cleanly on a fresh database.
-- Candidate and employer users can register, log in, refresh the SPA, and log out.
-- Pre-provisioned admin users can log in through the same auth flow.
-- Protected API routes reject unauthenticated requests and unauthorized roles correctly.
-- Frontend auth state survives reload through the sanctioned Sanctum flow.
-- Unit or feature tests cover registration, login, logout, and auth-policy boundaries.
+### Sprint 1 — Slice Foundations
+**Goal:** Start all four slices in parallel with enough local ownership that no developer is blocked on another developer’s Sprint 1 work.
 
-### Sprint 2 — Job Listings
-**Goal:** Deliver employer job CRUD and public job discovery with filterable, paginated listing APIs and SPA screens.
+**Slice deliverables:**
+- [ ] `[D1]` Create the auth data baseline, seed representative users, wire `/api/v1` routing and container bootstrapping, enable Sanctum or CSRF plumbing, and scaffold the Vue shell with candidate and employer layouts.
+- [ ] `[D2]` Build `Category`, `Location`, and `JobListing` core models plus repositories, initial factories or seeders, and the first public job UI primitives.
+- [ ] `[D3]` Create `EmployerProfile`, establish employer form abstractions, and add validation or accessibility groundwork on shared public and auth surfaces.
+- [ ] `[D4]` Create `CandidateProfile`, `Resume`, and `Application` core models plus candidate or application composable groundwork and seed support.
 
-**Backend deliverables:**
-- [ ] `[B1]` Create `Category`, `Location`, and `JobListing` models, migrations, repositories, and service-layer business rules.
-- [ ] `[B1]` Implement employer-facing job create, update, view, and remove endpoints with policy enforcement.
-- [ ] `[B2]` Implement public job list and job detail endpoints using JSON:API pagination for collections and `JsonResource` for single records.
-- [ ] `[B2]` Build the search service for keyword, location, category, experience level, salary, date, and work-type filters.
-- [ ] `[B2]` Add listing cache freshness handling using `Cache::touch()` plus public lookup endpoints for categories and locations.
-
-**Frontend deliverables:**
-- [ ] `[F1]` Build the public jobs index page, job detail page, filter bar, pagination flow, and job feature store or composables.
-- [ ] `[F1]` Add public loading, empty, validation, and fetch-error states for job discovery screens.
-- [ ] `[F2]` Build the employer dashboard shell and the employer job create or edit pages.
-- [ ] `[F2]` Implement employer job form state management and wire the job CRUD contract.
-- [ ] `[F2]` Prepare company branding UI hooks so logo upload can be integrated without page rewrites in Sprint 3.
+**Key handoffs:**
+- `D2` freezes the jobs core model, repository, and service contract needed by `D3` employer CRUD at the end of Sprint 1.
 
 **Definition of Done:**
-- Employers can create, edit, and remove their own job listings through the API and SPA.
-- New or edited listings persist with the expected moderation status and are visible in the employer dashboard.
-- Public users can browse approved job listings and filter them by every required criterion.
-- Pagination metadata is consistent between backend and frontend implementations.
-- Feature tests cover listing CRUD ownership rules and public filtering behavior.
+- Auth bootstrap, route grouping, and shared frontend shell foundations are in place.
+- Job, employer, candidate, resume, and application core data models exist and migrate cleanly.
+- All four developers can start Sprint 2 on their own slice without waiting on unfinished Sprint 1 ownership transfers.
 
-### Sprint 3 — Applications, Profiles & File Uploads
-**Goal:** Deliver the candidate profile workflow, resume and logo uploads, application submission, and employer review of candidate submissions.
+### Sprint 2 — Contracts & Feature Surfaces
+**Goal:** Finish the core API contracts and land the first full user-facing surfaces for auth, discovery, employer operations, and candidate profile infrastructure.
 
-**Backend deliverables:**
-- [ ] `[B1]` Create `Resume` and `Application` models, migrations, repositories, resources, and service-layer status rules.
-- [ ] `[B1]` Implement candidate profile endpoints and S3-compatible upload services for resumes and company logos.
-- [ ] `[B1]` Implement application submission, candidate-owned history, and candidate cancel flows.
-- [ ] `[B2]` Implement queued resume and logo processing plus employer-facing application notification persistence.
-- [ ] `[B2]` Add factories, seeders, and integration tests for applications, resumes, notifications, and queue-driven file handling.
+**Slice deliverables:**
+- [ ] `[D1]` Finish auth services, controllers, policies, shared factories, public shell, auth pages, and the admin layout shell.
+- [ ] `[D2]` Deliver public jobs list, detail, search, lookup, and cache contracts, plus the public job pages and search stores that consume them.
+- [ ] `[D3]` Deliver employer job create, update, show, and delete endpoints, employer state management, dashboard UX, and create or edit pages.
+- [ ] `[D4]` Deliver candidate profile service contracts, resume and application repositories, notification persistence, and the candidate profile store.
 
-**Frontend deliverables:**
-- [ ] `[F2]` Build candidate profile, resume upload, and candidate application-history pages.
-- [ ] `[F2]` Build employer application-review views and shared application status display components.
-- [ ] `[F1]` Integrate application submission from the public job detail page using the finalized application contract.
-- [ ] `[F1]` Harden shared stores, layouts, and error handling for authenticated candidate and employer flows.
-- [ ] `[F2]` Integrate logo upload and resume upload components into the relevant dashboard pages.
+**Key handoffs:**
+- `D1` freezes the authentication and shell contract after Sprint 2.
+- `D2` freezes the public jobs and search contract after Sprint 2.
+- `D3` freezes the employer job-management contract after Sprint 2.
+- `D4` freezes the notification payload or schema needed for later live-status work at the end of Sprint 2.
 
 **Definition of Done:**
-- Candidates can edit profile details, upload a resume, set a default resume, and retrieve application history.
-- Candidates can apply to an approved, open job with either a resume reference or contact forwarding.
-- Employers can review applications submitted to their own listings and inspect resume or contact data.
-- Historical application records preserve the submitted contact snapshot and linked resume reference.
-- Queue workers process file-related side effects without blocking interactive application requests.
+- Auth flows are stable for every protected slice.
+- Public jobs discovery is contract-stable and consumable end to end.
+- Employer CRUD works against the D2 jobs core without ownership drift.
+- Candidate profile and application persistence foundations are ready for Sprint 3 feature completion.
 
-### Sprint 4 — Admin Panel, Real-time & Polish
-**Goal:** Finalize moderation workflows, real-time status updates, and end-to-end quality gates for the MVP release.
+### Sprint 3 — Candidate Lifecycle & Decision Flows
+**Goal:** Deliver the candidate workflow end to end while completing employer review, decision handling, and the shared UI infrastructure that later dashboards depend on.
 
-**Backend deliverables:**
-- [ ] `[B2]` Implement admin moderation endpoints, platform activity queries, and approve or reject business logic.
-- [ ] `[B2]` Configure `ApplicationStatusChanged` broadcasting, private channel authorization, and final cache invalidation hooks.
-- [ ] `[B1]` Implement employer accept or reject application transitions with policy coverage and audit timestamps.
-- [ ] `[B1]` Close QA findings across auth, listings, profiles, file uploads, and applications.
-- [ ] `[B2]` Complete API contract verification and backend regression checks for all `/api/v1` domains.
+**Slice deliverables:**
+- [ ] `[D1]` Deliver shared UI primitives, toast infrastructure, and reusable pagination helpers for downstream screens.
+- [ ] `[D2]` Start admin moderation service, controller, store, and composable work so Sprint 4 UI can land against stable moderation contracts.
+- [ ] `[D3]` Deliver employer application review, accept or reject transitions, status badges, and public loading or responsive polish.
+- [ ] `[D4]` Deliver file storage, resume or application endpoints, queue jobs, candidate profile or application pages, and the public apply modal.
 
-**Frontend deliverables:**
-- [ ] `[F2]` Build the admin jobs moderation page and connect it to pending and all-job endpoints.
-- [ ] `[F2]` Add `useEcho`, role-scoped live status updates, and protected dashboard navigation.
-- [ ] `[F1]` Finish responsive and accessibility polish on public or auth screens and verify WCAG 2.1 AA basics.
-- [ ] `[F1]` Add regression tests for public job discovery and auth workflows.
-- [ ] `[F2]` Add regression tests for employer, candidate, and admin flows after real-time integration.
+**Key handoffs:**
+- `D4` freezes the candidate profile and application contract after Sprint 3.
+- `D3` freezes the employer decision and status contract after Sprint 3.
+- `D2` publishes the admin moderation contract before Sprint 4 UI completion.
 
 **Definition of Done:**
-- Admins can approve or reject pending job listings from the SPA, and approved jobs become publicly searchable.
-- Employers can accept or reject applications, and status changes are persisted correctly.
-- Candidate and employer dashboards receive Reverb updates for application status changes without polling.
-- Accessibility, responsive layout, and protected-route checks are complete for all primary user journeys.
-- Cross-role regression tests pass for auth, listings, applications, moderation, uploads, and real-time behavior.
+- Candidates can maintain profile data, upload resumes, apply from job detail, view history, and cancel eligible applications.
+- Employers can review applications for owned jobs and change status through stable endpoints and UI.
+- Shared UI primitives cover the common modal, form, toast, and pagination needs used by the remaining dashboards.
+
+### Sprint 4 — Governance, Real-time & Release Hardening
+**Goal:** Finish moderation, real-time status updates, branding upload integration, and final regression coverage for release readiness.
+
+**Slice deliverables:**
+- [ ] `[D1]` Run the PHP Attribute audit, add shared backend test helpers, and support final integration cleanup on shared foundations.
+- [ ] `[D2]` Finish admin moderation surfaces, platform activity endpoints, cache invalidation, route-contract docs, and regression fixes for discovery or governance domains.
+- [ ] `[D3]` Deliver Reverb events, channels, auth wiring, `useEcho`, live status UX, and auth or public-discovery regression coverage.
+- [ ] `[D4]` Deliver employer branding-upload contracts, queue-backed logo processing, file or notification integration tests, the candidate applications page, and dashboard regression coverage.
+
+**Key handoffs:**
+- `D4` publishes branding-upload payloads before employer surface integration.
+- `D3` publishes the real-time channel and payload contract before final QA.
+
+**Definition of Done:**
+- Admins can approve or reject job listings and inspect platform activity from the SPA.
+- Candidate and employer dashboards receive real-time application status updates without polling.
+- Branding upload, queue-driven file processing, and notification persistence are verified through integration tests.
+- Accessibility, responsive layout, regression coverage, and route-contract documentation are complete for MVP signoff.
 
 ### Technology Decisions Log
 
@@ -115,9 +103,9 @@
 | --- | --- | --- | --- |
 | Re-approval rules for employer edits may be implemented inconsistently between backend and frontend states. | Medium | High | Treat moderation status as backend-owned, expose it explicitly in every employer listing payload, and cover edit-after-approval behavior with feature tests. |
 | S3-compatible upload configuration may fail late in integration, blocking resume and logo workflows. | Medium | High | Validate the storage driver in Sprint 3 with real uploads, keep upload services isolated, and add fallback QA steps before UI completion. |
-| API contract drift between backend resources and frontend stores may slow Sprint 3 and Sprint 4 integration. | High | High | Freeze contracts by domain at sprint boundaries, publish example payloads, and review response shapes during integration checkpoints. |
+| API contract drift between slices may slow Sprint 3 and Sprint 4 integration. | High | High | Freeze contracts by domain at sprint boundaries, publish example payloads, and review response shapes during integration checkpoints. |
 | Public search performance may degrade once multiple filters are combined against real data. | Medium | Medium | Index filter columns early, keep collection endpoints paginated, and test worst-case filter combinations with seeded datasets in Sprint 2. |
 | Authorization gaps may expose employer or candidate data across ownership boundaries. | Medium | High | Use Laravel Policies on every protected domain action and add negative-path feature tests for cross-role and cross-owner access. |
 | Queue workers or Reverb may not be running in shared development environments, masking real-time failures until late QA. | Medium | High | Include environment checklists in Sprint 4, add observable health checks, and validate queue plus Reverb setup before polishing work starts. |
-| Equal team progress may be disrupted if one backend contract lands late and blocks both frontend owners. | Medium | Medium | Keep API domains isolated by owner, prioritize contract-first reviews, and use lookup or mock payloads where short-term decoupling is possible. |
+| The notification-persistence to live-broadcast handoff may land late and block final real-time integration. | Medium | Medium | Freeze the notification schema at the end of Sprint 2, test the event payload contract in isolation, and schedule the D3 plus D4 integration check before Sprint 4 implementation. |
 | Final accessibility and regression work may be compressed by late integration defects. | Medium | Medium | Reserve explicit Sprint 4 capacity for QA and a11y fixes rather than assuming they can be absorbed into feature-complete tasks. |

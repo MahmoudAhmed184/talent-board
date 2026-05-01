@@ -495,7 +495,7 @@ Single-item response pattern:
 {
   "data": {
     "id": "job_123",
-    "title": "Backend Developer"
+    "title": "Software Engineer"
   }
 }
 ```
