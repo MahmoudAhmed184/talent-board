@@ -12,5 +12,13 @@
     <p class="mt-2 text-sm leading-6 text-slate-600">
       Employer routes render inside the protected employer layout shell.
     </p>
+    <div class="mt-5">
+      <RouterLink
+        to="/employer/applications"
+        class="inline-flex h-10 items-center justify-center rounded-md bg-cyan-700 px-4 text-sm font-semibold text-white hover:bg-cyan-800"
+      >
+        Review applications
+      </RouterLink>
+    </div>
   </section>
 </template>

@@ -13,6 +13,7 @@ const navItems = [
   { label: 'Overview', to: '/employer' },
   { label: 'Dashboard', to: '/employer/dashboard' },
   { label: 'Create job', to: '/employer/jobs/create' },
+  { label: 'Applications', to: '/employer/applications' },
 ] as const
 </script>
 
