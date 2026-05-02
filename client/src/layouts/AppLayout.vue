@@ -42,6 +42,12 @@ const dashboardPath = computed(() => {
 
         <div class="flex items-center gap-2">
           <RouterLink
+            to="/jobs"
+            class="rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-950"
+          >
+            Jobs
+          </RouterLink>
+          <RouterLink
             v-if="authStore.isAuthenticated"
             :to="dashboardPath"
             class="rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-950"

@@ -16,6 +16,12 @@
       </p>
       <div class="mt-8 flex flex-wrap gap-3">
         <RouterLink
+          to="/jobs"
+          class="inline-flex h-11 items-center justify-center rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+        >
+          Browse jobs
+        </RouterLink>
+        <RouterLink
           to="/auth/register"
           class="inline-flex h-11 items-center justify-center rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800"
         >

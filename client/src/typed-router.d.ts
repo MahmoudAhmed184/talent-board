@@ -72,6 +72,27 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/employer/applications': RouteRecordInfo<
+      '/employer/applications',
+      '/employer/applications',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/jobs/': RouteRecordInfo<
+      '/jobs/',
+      '/jobs',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/jobs/[id]': RouteRecordInfo<
+      '/jobs/[id]',
+      '/jobs/:id',
+      { id: ParamValue<true> },
+      { id: ParamValue<false> },
+      | never
+    >,
   }
 
   /**
@@ -137,12 +158,31 @@ declare module 'vue-router/auto-routes' {
     'src/pages/employer/_parent.vue': {
       routes:
         | '/employer/'
+        | '/employer/applications'
       views:
         | 'default'
     }
     'src/pages/employer/index.vue': {
       routes:
         | '/employer/'
+      views:
+        | never
+    }
+    'src/pages/employer/applications.vue': {
+      routes:
+        | '/employer/applications'
+      views:
+        | never
+    }
+    'src/pages/jobs/index.vue': {
+      routes:
+        | '/jobs/'
+      views:
+        | never
+    }
+    'src/pages/jobs/[id].vue': {
+      routes:
+        | '/jobs/[id]'
       views:
         | never
     }
