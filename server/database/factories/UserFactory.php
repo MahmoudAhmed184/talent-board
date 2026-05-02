@@ -47,22 +47,30 @@ class UserFactory extends Factory
 
     public function candidate(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'role' => UserRole::Candidate,
-        ]);
+        return $this->role(UserRole::Candidate);
     }
 
     public function employer(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'role' => UserRole::Employer,
-        ]);
+        return $this->role(UserRole::Employer);
     }
 
     public function admin(): static
     {
+        return $this->role(UserRole::Admin);
+    }
+
+    public function role(UserRole $role): static
+    {
         return $this->state(fn (array $attributes) => [
-            'role' => UserRole::Admin,
+            'role' => $role,
+        ]);
+    }
+
+    public function withPassword(string $password): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'password' => $password,
         ]);
     }
 }
