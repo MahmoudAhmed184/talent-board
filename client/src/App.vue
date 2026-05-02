@@ -1,16 +1,13 @@
 <script setup lang="ts">
-import JobForm from './components/employer/JobForm.vue';
-import type { EmployerJobPayload } from './composables/useEmployerJobForm';
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import AppLayout from './layouts/AppLayout.vue'
 
-const handleSubmit = (payload: EmployerJobPayload): void => {
-  // This placeholder keeps the shared form fully reusable while backend
-  // contracts are still being finalized in parallel slices.
-  console.info('Employer job payload', payload);
-};
+const route = useRoute()
+const usesStandaloneLayout = computed(() => route.meta.layout === 'standalone')
 </script>
 
 <template>
-  <main class="app-shell">
-    <JobForm mode="create" submit-label="Save draft" @submit="handleSubmit" />
-  </main>
+  <RouterView v-if="usesStandaloneLayout" />
+  <AppLayout v-else />
 </template>

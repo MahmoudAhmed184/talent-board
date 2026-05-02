@@ -1,6 +1,10 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Enums\UserRole;
+use App\Models\User;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Testing\TestResponse;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 /*
@@ -15,7 +19,7 @@ use Tests\TestCase;
 */
 
 pest()->extend(TestCase::class)
- // ->use(RefreshDatabase::class)
+    ->use(LazilyRefreshDatabase::class)
     ->in('Feature');
 
 /*
@@ -44,7 +48,86 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function testUserRole(UserRole|string $role): UserRole
 {
-    // ..
+    return $role instanceof UserRole ? $role : UserRole::from($role);
+}
+
+/**
+ * @param  array<string, mixed>  $attributes
+ */
+function actingAsRole(UserRole|string $role, array $attributes = []): User
+{
+    $role = testUserRole($role);
+
+    $factory = match ($role) {
+        UserRole::Candidate => User::factory()->candidate(),
+        UserRole::Employer => User::factory()->employer(),
+        UserRole::Admin => User::factory()->admin(),
+    };
+
+    $user = $factory->create($attributes);
+
+    Sanctum::actingAs($user, $role->abilities());
+
+    return $user;
+}
+
+/**
+ * @param  array<string, mixed>  $attributes
+ */
+function actingAsCandidate(array $attributes = []): User
+{
+    return actingAsRole(UserRole::Candidate, $attributes);
+}
+
+/**
+ * @param  array<string, mixed>  $attributes
+ */
+function actingAsEmployer(array $attributes = []): User
+{
+    return actingAsRole(UserRole::Employer, $attributes);
+}
+
+/**
+ * @param  array<string, mixed>  $attributes
+ */
+function actingAsAdmin(array $attributes = []): User
+{
+    return actingAsRole(UserRole::Admin, $attributes);
+}
+
+/**
+ * @param  array<string, mixed>  $data
+ * @param  array<string, string>  $headers
+ */
+function roleScopedJson(
+    string $method,
+    string $uri,
+    UserRole|string $role,
+    array $data = [],
+    array $headers = [],
+): TestResponse {
+    actingAsRole($role);
+
+    return test()->json($method, $uri, $data, $headers);
+}
+
+function assertJsonApiPaginated(TestResponse $response): TestResponse
+{
+    $response->assertJsonStructure([
+        'data',
+        'links' => ['first', 'last', 'prev', 'next'],
+        'meta' => [
+            'current_page',
+            'from',
+            'last_page',
+            'path',
+            'per_page',
+            'to',
+            'total',
+        ],
+    ]);
+
+    return $response;
 }
