@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { isApiValidationError } from '../../http'
 import { useAuth } from '../../features/auth/composables/useAuth'
 import type { LoginPayload, UserRole } from '../../features/auth/types'
-import type { ValidationErrorMap } from '../../http'
+import { useFormErrors, type ApiErrorPayload } from '../../composables/useFormErrors'
 
 const route = useRoute()
 const router = useRouter()
@@ -14,16 +14,16 @@ const form = reactive<LoginPayload>({
   email: '',
   password: '',
 })
-const errors = ref<ValidationErrorMap>({})
-const formError = ref('')
 const isSubmitting = ref(false)
+const { state, clearErrors, setFieldError, setFormError, mapApiErrors, getFieldError } =
+  useFormErrors<keyof LoginPayload>()
 
 function roleHome(role: UserRole) {
   return role === 'admin' ? '/admin' : `/${role}`
 }
 
 function firstError(field: keyof LoginPayload) {
-  return errors.value[field]?.[0] ?? ''
+  return getFieldError(field) ?? ''
 }
 
 function redirectTarget(role: UserRole) {
@@ -33,8 +33,18 @@ function redirectTarget(role: UserRole) {
 }
 
 async function submit() {
-  errors.value = {}
-  formError.value = ''
+  clearErrors()
+
+  if (!form.email.trim()) {
+    setFieldError('email', 'Email is required.')
+  }
+  if (!form.password.trim()) {
+    setFieldError('password', 'Password is required.')
+  }
+  if (firstError('email') || firstError('password')) {
+    return
+  }
+
   isSubmitting.value = true
 
   try {
@@ -42,10 +52,9 @@ async function submit() {
     await router.push(redirectTarget(context.role))
   } catch (error) {
     if (isApiValidationError(error)) {
-      errors.value = error.errors
-      formError.value = error.message
+      mapApiErrors(error as ApiErrorPayload)
     } else {
-      formError.value = 'Unable to sign in with those credentials.'
+      setFormError('Unable to sign in with those credentials.')
     }
   } finally {
     isSubmitting.value = false
@@ -65,11 +74,12 @@ async function submit() {
     </div>
 
     <p
-      v-if="formError"
+      v-if="state.formError.value"
       class="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
       role="alert"
+      aria-live="assertive"
     >
-      {{ formError }}
+      {{ state.formError.value }}
     </p>
 
     <label class="grid gap-2">
@@ -81,9 +91,9 @@ async function submit() {
         class="h-11 rounded-md border border-slate-300 px-3 text-sm text-slate-950 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
         :class="{ 'border-red-400 focus:border-red-500 focus:ring-red-100': firstError('email') }"
         :aria-invalid="Boolean(firstError('email'))"
-        aria-describedby="login-email-error"
+        :aria-describedby="firstError('email') ? 'login-email-error' : undefined"
       >
-      <span v-if="firstError('email')" id="login-email-error" class="text-sm text-red-600">
+      <span v-if="firstError('email')" id="login-email-error" class="text-sm text-red-600" role="alert">
         {{ firstError('email') }}
       </span>
     </label>
@@ -97,9 +107,14 @@ async function submit() {
         class="h-11 rounded-md border border-slate-300 px-3 text-sm text-slate-950 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
         :class="{ 'border-red-400 focus:border-red-500 focus:ring-red-100': firstError('password') }"
         :aria-invalid="Boolean(firstError('password'))"
-        aria-describedby="login-password-error"
+        :aria-describedby="firstError('password') ? 'login-password-error' : undefined"
       >
-      <span v-if="firstError('password')" id="login-password-error" class="text-sm text-red-600">
+      <span
+        v-if="firstError('password')"
+        id="login-password-error"
+        class="text-sm text-red-600"
+        role="alert"
+      >
         {{ firstError('password') }}
       </span>
     </label>

@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { isApiValidationError } from '../../http'
 import { useAuth } from '../../features/auth/composables/useAuth'
 import type { RegisterPayload, UserRole } from '../../features/auth/types'
-import type { ValidationErrorMap } from '../../http'
+import { useFormErrors, type ApiErrorPayload } from '../../composables/useFormErrors'
 
 const router = useRouter()
 const { register } = useAuth()
@@ -17,22 +17,41 @@ const form = reactive<RegisterPayload>({
   password_confirmation: '',
   company_name: '',
 })
-const errors = ref<ValidationErrorMap>({})
-const formError = ref('')
 const isSubmitting = ref(false)
 const isEmployer = computed(() => form.role === 'employer')
+const { state, clearErrors, setFieldError, setFormError, mapApiErrors, getFieldError } =
+  useFormErrors<keyof RegisterPayload>()
 
 function roleHome(role: UserRole) {
   return role === 'admin' ? '/admin' : `/${role}`
 }
 
 function firstError(field: keyof RegisterPayload) {
-  return errors.value[field]?.[0] ?? ''
+  return getFieldError(field) ?? ''
 }
 
 async function submit() {
-  errors.value = {}
-  formError.value = ''
+  clearErrors()
+
+  if (!form.name.trim()) {
+    setFieldError('name', 'Name is required.')
+  }
+  if (!form.email.trim()) {
+    setFieldError('email', 'Email is required.')
+  }
+  if (form.password.length < 8) {
+    setFieldError('password', 'Password must be at least 8 characters.')
+  }
+  if (form.password_confirmation !== form.password) {
+    setFieldError('password_confirmation', 'Password confirmation must match password.')
+  }
+  if (isEmployer.value && !form.company_name?.trim()) {
+    setFieldError('company_name', 'Company name is required for employer accounts.')
+  }
+  if (state.fieldErrors.value && Object.keys(state.fieldErrors.value).length > 0) {
+    return
+  }
+
   isSubmitting.value = true
 
   try {
@@ -49,10 +68,9 @@ async function submit() {
     await router.push(roleHome(context.role))
   } catch (error) {
     if (isApiValidationError(error)) {
-      errors.value = error.errors
-      formError.value = error.message
+      mapApiErrors(error as ApiErrorPayload)
     } else {
-      formError.value = 'Unable to create an account right now.'
+      setFormError('Unable to create an account right now.')
     }
   } finally {
     isSubmitting.value = false
@@ -72,17 +90,21 @@ async function submit() {
     </div>
 
     <p
-      v-if="formError"
+      v-if="state.formError.value"
       class="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
       role="alert"
+      aria-live="assertive"
     >
-      {{ formError }}
+      {{ state.formError.value }}
     </p>
 
-    <fieldset class="grid gap-2">
+    <fieldset class="grid gap-2" aria-describedby="role-help">
       <legend class="text-sm font-medium text-slate-700">
         Account type
       </legend>
+      <p id="role-help" class="text-xs text-slate-500">
+        Choose candidate to apply for jobs, or employer to post and review applications.
+      </p>
       <div class="grid grid-cols-2 gap-2 rounded-md bg-slate-100 p-1">
         <label class="cursor-pointer rounded px-3 py-2 text-center text-sm font-medium has-[:checked]:bg-white has-[:checked]:text-emerald-800 has-[:checked]:shadow-sm">
           <input v-model="form.role" type="radio" value="candidate" class="sr-only">
@@ -93,7 +115,7 @@ async function submit() {
           Employer
         </label>
       </div>
-      <span v-if="firstError('role')" class="text-sm text-red-600">
+      <span v-if="firstError('role')" class="text-sm text-red-600" role="alert">
         {{ firstError('role') }}
       </span>
     </fieldset>
@@ -107,8 +129,9 @@ async function submit() {
         class="h-11 rounded-md border border-slate-300 px-3 text-sm text-slate-950 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
         :class="{ 'border-red-400 focus:border-red-500 focus:ring-red-100': firstError('name') }"
         :aria-invalid="Boolean(firstError('name'))"
+        :aria-describedby="firstError('name') ? 'register-name-error' : undefined"
       >
-      <span v-if="firstError('name')" class="text-sm text-red-600">
+      <span v-if="firstError('name')" id="register-name-error" class="text-sm text-red-600" role="alert">
         {{ firstError('name') }}
       </span>
     </label>
@@ -122,8 +145,9 @@ async function submit() {
         class="h-11 rounded-md border border-slate-300 px-3 text-sm text-slate-950 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
         :class="{ 'border-red-400 focus:border-red-500 focus:ring-red-100': firstError('company_name') }"
         :aria-invalid="Boolean(firstError('company_name'))"
+        :aria-describedby="firstError('company_name') ? 'register-company-error' : undefined"
       >
-      <span v-if="firstError('company_name')" class="text-sm text-red-600">
+      <span v-if="firstError('company_name')" id="register-company-error" class="text-sm text-red-600" role="alert">
         {{ firstError('company_name') }}
       </span>
     </label>
@@ -137,8 +161,9 @@ async function submit() {
         class="h-11 rounded-md border border-slate-300 px-3 text-sm text-slate-950 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
         :class="{ 'border-red-400 focus:border-red-500 focus:ring-red-100': firstError('email') }"
         :aria-invalid="Boolean(firstError('email'))"
+        :aria-describedby="firstError('email') ? 'register-email-error' : undefined"
       >
-      <span v-if="firstError('email')" class="text-sm text-red-600">
+      <span v-if="firstError('email')" id="register-email-error" class="text-sm text-red-600" role="alert">
         {{ firstError('email') }}
       </span>
     </label>
@@ -152,8 +177,9 @@ async function submit() {
         class="h-11 rounded-md border border-slate-300 px-3 text-sm text-slate-950 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
         :class="{ 'border-red-400 focus:border-red-500 focus:ring-red-100': firstError('password') }"
         :aria-invalid="Boolean(firstError('password'))"
+        :aria-describedby="firstError('password') ? 'register-password-error' : undefined"
       >
-      <span v-if="firstError('password')" class="text-sm text-red-600">
+      <span v-if="firstError('password')" id="register-password-error" class="text-sm text-red-600" role="alert">
         {{ firstError('password') }}
       </span>
     </label>
@@ -167,8 +193,9 @@ async function submit() {
         class="h-11 rounded-md border border-slate-300 px-3 text-sm text-slate-950 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
         :class="{ 'border-red-400 focus:border-red-500 focus:ring-red-100': firstError('password_confirmation') }"
         :aria-invalid="Boolean(firstError('password_confirmation'))"
+        :aria-describedby="firstError('password_confirmation') ? 'register-confirm-error' : undefined"
       >
-      <span v-if="firstError('password_confirmation')" class="text-sm text-red-600">
+      <span v-if="firstError('password_confirmation')" id="register-confirm-error" class="text-sm text-red-600" role="alert">
         {{ firstError('password_confirmation') }}
       </span>
     </label>
