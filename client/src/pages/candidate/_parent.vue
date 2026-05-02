@@ -1,6 +1,7 @@
 <route lang="json">
 {
   "meta": {
+    "layout": "standalone",
     "requiresAuth": true,
     "role": "candidate"
   }

@@ -1,7 +1,8 @@
 <route lang="json">
 {
   "meta": {
-    "guestOnly": true
+    "guestOnly": true,
+    "layout": "standalone"
   }
 }
 </route>
