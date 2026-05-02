@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import ToastHost from '../components/ToastHost.vue'
 import { useAuthStore } from '../features/auth/stores/useAuthStore'
 
 const authStore = useAuthStore()
@@ -22,6 +23,8 @@ const dashboardPath = computed(() => {
 
 <template>
   <div class="min-h-svh bg-slate-50 text-slate-950">
+    <ToastHost />
+
     <div
       v-if="authStore.isSessionLoading"
       class="h-1 w-full overflow-hidden bg-slate-200"
