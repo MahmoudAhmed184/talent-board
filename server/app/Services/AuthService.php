@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthService
 {
@@ -66,7 +67,7 @@ class AuthService
     {
         $token = $request->user()?->currentAccessToken();
 
-        if ($token && method_exists($token, 'delete')) {
+        if ($token instanceof PersonalAccessToken) {
             $token->delete();
         }
 
