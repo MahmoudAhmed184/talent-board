@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Model;
 
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
     'logo_path',
     'logo_original_name',
 ])]
+#[Hidden(['logo_disk', 'logo_path'])]
 class EmployerProfile extends Model
 {
     /**
