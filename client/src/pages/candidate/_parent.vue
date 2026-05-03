@@ -11,7 +11,6 @@
 <script setup lang="ts">
 const navItems = [
   { label: 'Overview', to: '/candidate' },
-  { label: 'Profile', to: '/candidate/profile' },
   { label: 'Applications', to: '/candidate/applications' },
 ] as const
 </script>

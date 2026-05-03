@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use App\Repositories\Contracts\EmployerProfileRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
@@ -16,6 +17,7 @@ class AuthService
 {
     public function __construct(
         private readonly UserRepositoryInterface $users,
+        private readonly EmployerProfileRepositoryInterface $employerProfiles,
     ) {}
 
     /**
@@ -38,9 +40,15 @@ class AuthService
             'role' => $role,
         ]);
 
+        if ($role === UserRole::Employer) {
+            $this->employerProfiles->createForUser($user, [
+                'company_name' => $attributes['company_name'],
+            ]);
+        }
+
         $this->startSession($user, $request);
 
-        return $user->refresh();
+        return $user->refresh()->loadMissing('employerProfile');
     }
 
     /**

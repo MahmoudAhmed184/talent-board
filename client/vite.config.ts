@@ -1,4 +1,5 @@
-import { defineConfig } from 'vite'
+/// <reference types="vitest/config" />
+import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import VueRouter from 'vue-router/vite'
@@ -13,4 +14,9 @@ export default defineConfig({
     vue(),
     tailwindcss(),
   ],
+  test: {
+    environment: 'jsdom',
+    globals: false,
+    setupFiles: './src/test/setup.ts',
+  },
 })

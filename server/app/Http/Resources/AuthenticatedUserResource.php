@@ -20,7 +20,11 @@ class AuthenticatedUserResource extends JsonResource
             'user' => new UserResource($this->resource),
             'role' => $this->role->value,
             'abilities' => $this->role->abilities(),
-            'profile' => null,
+            'profile' => $this->when(
+                $this->relationLoaded('employerProfile') && $this->employerProfile,
+                fn () => new EmployerResource($this->employerProfile),
+                null,
+            ),
         ];
     }
 }
