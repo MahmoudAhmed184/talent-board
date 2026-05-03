@@ -4,7 +4,7 @@ import { http } from '../http'
 import { useFormErrors, type ApiErrorPayload } from '../composables/useFormErrors'
 import type { EmployerJobFormData, EmployerJobPayload } from '../composables/useEmployerJobForm'
 
-export type ModerationStatus = 'pending' | 'approved' | 'rejected'
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected'
 
 export interface EmployerJob {
   id: number
@@ -18,7 +18,7 @@ export interface EmployerJob {
   experience_level: string
   salary_min: number | null
   salary_max: number | null
-  moderation_status: ModerationStatus
+  approval_status: ApprovalStatus
   published_at: string | null
   expires_at: string | null
   created_at: string | null

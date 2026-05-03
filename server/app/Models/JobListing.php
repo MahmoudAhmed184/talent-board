@@ -15,20 +15,25 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Table('job_listings')]
 #[Fillable([
-    'employer_id',
+    'employer_user_id',
+    'category_id',
+    'location_id',
     'title',
     'description',
     'responsibilities',
+    'required_skills',
     'qualifications',
-    'location',
-    'category',
-    'work_type',
-    'experience_level',
     'salary_min',
     'salary_max',
-    'moderation_status',
+    'benefits',
+    'work_type',
+    'technologies',
+    'experience_level',
+    'application_deadline',
+    'approval_status',
     'published_at',
-    'expires_at',
+    'approved_by',
+    'rejected_reason',
 ])]
 #[Hidden([])]
 #[UsePolicy(JobListingPolicy::class)]
@@ -45,14 +50,26 @@ class JobListing extends Model
         return [
             'salary_min' => 'integer',
             'salary_max' => 'integer',
+            'required_skills' => 'array',
+            'technologies' => 'array',
             'published_at' => 'datetime',
-            'expires_at' => 'datetime',
+            'application_deadline' => 'datetime',
         ];
     }
 
     public function employer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'employer_id');
+        return $this->belongsTo(User::class, 'employer_user_id');
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class, 'category_id');
+    }
+
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'location_id');
     }
 
     public function applications(): HasMany

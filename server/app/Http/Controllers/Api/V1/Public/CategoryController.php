@@ -1,0 +1,17 @@
+<?php
+
+namespace App\Http\Controllers\Api\V1\Public;
+
+use App\Http\Controllers\Controller;
+use App\Models\Category;
+use Illuminate\Http\JsonResponse;
+
+class CategoryController extends Controller
+{
+    public function __invoke(): JsonResponse
+    {
+        return response()->json([
+            'data' => Category::query()->orderBy('name')->get(['id', 'name', 'slug']),
+        ]);
+    }
+}

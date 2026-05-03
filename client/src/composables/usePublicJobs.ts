@@ -28,11 +28,14 @@ export interface PublicJobSummary {
 
 export interface PublicJobFilters {
   q?: string
-  location?: string
-  category?: string
-  work_type?: string
-  experience_level?: string
-  date_posted?: string
+  location_id?: number | null
+  category_id?: number | null
+  work_type?: string | null
+  experience_level?: string | null
+  salary_min?: number | null
+  salary_max?: number | null
+  posted_after?: string | null
+  posted_before?: string | null
   page?: number
   per_page?: number
 }
@@ -89,11 +92,14 @@ export function usePublicJobs() {
       const response = await http.get<PublicCollectionResponse>('/api/v1/jobs', {
         params: {
           q: filters.q?.trim() || undefined,
-          location: filters.location?.trim() || undefined,
-          category: filters.category?.trim() || undefined,
+          location_id: filters.location_id || undefined,
+          category_id: filters.category_id || undefined,
           work_type: filters.work_type || undefined,
           experience_level: filters.experience_level || undefined,
-          date_posted: filters.date_posted || undefined,
+          salary_min: filters.salary_min || undefined,
+          salary_max: filters.salary_max || undefined,
+          posted_after: filters.posted_after || undefined,
+          posted_before: filters.posted_before || undefined,
           page: filters.page || undefined,
           per_page: filters.per_page || undefined,
         },

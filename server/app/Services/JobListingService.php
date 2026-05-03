@@ -38,7 +38,7 @@ class JobListingService
     {
         return $this->jobListings->update($jobListing, [
             ...$attributes,
-            'moderation_status' => 'pending',
+            'approval_status' => 'pending',
             'published_at' => null,
         ]);
     }
