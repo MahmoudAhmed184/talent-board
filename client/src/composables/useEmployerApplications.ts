@@ -8,6 +8,10 @@ type EmployerDecision = 'accepted' | 'rejected'
 export interface EmployerApplicationItem {
   id: number
   job_listing_id: number | null
+  job_listing?: {
+    id: number | null
+    title: string | null
+  }
   status: ApplicationStatus
   cover_letter: string | null
   contact_email: string | null
@@ -115,6 +119,29 @@ export function useEmployerApplications() {
     }
   }
 
+  function applyStatusUpdate(payload: {
+    application_id: number
+    status: ApplicationStatus
+    changed_at: string
+  }): void {
+    const updateItem = (item: EmployerApplicationItem): EmployerApplicationItem =>
+      item.id === payload.application_id
+        ? {
+            ...item,
+            status: payload.status,
+            decision: {
+              ...item.decision,
+              decided_at: payload.changed_at,
+            },
+          }
+        : item
+
+    list.value = list.value.map(updateItem)
+    if (selected.value?.id === payload.application_id) {
+      selected.value = updateItem(selected.value)
+    }
+  }
+
   return {
     list,
     selected,
@@ -126,5 +153,6 @@ export function useEmployerApplications() {
     loadList,
     loadDetail,
     updateDecision,
+    applyStatusUpdate,
   }
 }

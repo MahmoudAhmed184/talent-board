@@ -19,6 +19,10 @@ class EmployerApplicationResource extends JsonResource
         return [
             'id' => $this->id,
             'job_listing_id' => $this->job_listing_id,
+            'job_listing' => $this->whenLoaded('jobListing', fn (): array => [
+                'id' => $this->jobListing?->id,
+                'title' => $this->jobListing?->title,
+            ]),
             'status' => $this->status->value,
             'cover_letter' => $this->cover_letter,
             'contact_email' => $this->contact_email,

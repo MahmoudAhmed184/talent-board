@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Events\ApplicationStatusChanged;
+use App\Listeners\BroadcastApplicationStatusChanged;
 use App\Models\PersonalAccessToken;
 use App\Repositories\Contracts\ApplicationRepositoryInterface;
 use App\Repositories\Contracts\EmployerProfileRepositoryInterface;
@@ -11,6 +13,7 @@ use App\Repositories\EloquentApplicationRepository;
 use App\Repositories\EloquentEmployerProfileRepository;
 use App\Repositories\EloquentJobListingRepository;
 use App\Repositories\EloquentUserRepository;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
@@ -34,6 +37,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
+        Event::listen(ApplicationStatusChanged::class, BroadcastApplicationStatusChanged::class);
 
         Queue::route([
             'App\\Jobs\\ProcessResumeUpload' => 'files',

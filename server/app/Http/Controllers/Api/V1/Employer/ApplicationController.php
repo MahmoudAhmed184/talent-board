@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Api\V1\Employer;
 
 use App\Enums\ApplicationStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ListEmployerApplicationsRequest;
 use App\Http\Requests\UpdateApplicationStatusRequest;
 use App\Http\Resources\EmployerApplicationResource;
 use App\Models\Application;
 use App\Models\User;
 use App\Services\ApplicationService;
-use Illuminate\Http\Request;
 
 class ApplicationController extends Controller
 {
@@ -17,16 +17,13 @@ class ApplicationController extends Controller
         private readonly ApplicationService $applications,
     ) {}
 
-    public function index(Request $request): mixed
+    public function index(ListEmployerApplicationsRequest $request): mixed
     {
         /** @var User $user */
         $user = $request->user();
         $this->authorize('viewAny', Application::class);
 
-        $validated = $request->validate([
-            'status' => ['nullable', 'string'],
-            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
-        ]);
+        $validated = $request->validated();
 
         $status = isset($validated['status'])
             ? ApplicationStatus::tryFrom($validated['status'])
@@ -38,7 +35,7 @@ class ApplicationController extends Controller
         );
     }
 
-    public function show(Request $request, Application $application): EmployerApplicationResource
+    public function show(ListEmployerApplicationsRequest $request, Application $application): EmployerApplicationResource
     {
         /** @var User $user */
         $user = $request->user();

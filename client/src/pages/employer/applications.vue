@@ -2,8 +2,12 @@
 import { computed, onMounted, ref } from 'vue'
 import ApplicationStatusBadge from '../../components/ApplicationStatusBadge.vue'
 import { useEmployerApplications } from '../../composables/useEmployerApplications'
+import { useEcho, type ApplicationStatusChangedPayload } from '../../composables/useEcho'
+import { useAuthStore } from '../../features/auth/stores/useAuthStore'
 
 const decisionNote = ref('')
+const authStore = useAuthStore()
+const echo = useEcho()
 const {
   list,
   selected,
@@ -15,6 +19,7 @@ const {
   loadList,
   loadDetail,
   updateDecision,
+  applyStatusUpdate,
 } = useEmployerApplications()
 
 const canDecide = computed(() => {
@@ -38,6 +43,14 @@ async function decide(decision: 'accepted' | 'rejected') {
 }
 
 onMounted(async () => {
+  if (authStore.user?.id) {
+    echo.subscribePrivate<ApplicationStatusChangedPayload>(
+      `application-status.employer.${authStore.user.id}`,
+      '.ApplicationStatusChanged',
+      (payload) => applyStatusUpdate(payload),
+    )
+  }
+
   await loadList()
   const firstItem = list.value[0]
   if (firstItem) {

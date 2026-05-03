@@ -59,6 +59,11 @@ class Application extends Model
         return $this->belongsTo(User::class, 'candidate_id');
     }
 
+    public function jobListing(): BelongsTo
+    {
+        return $this->belongsTo(JobListing::class);
+    }
+
     public function decisionActor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'decided_by_user_id');
