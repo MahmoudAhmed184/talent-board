@@ -44,12 +44,12 @@ test('employer can create pending job listing through api', function () {
     $this->postJson('/api/v1/employer/jobs', validJobPayload())
         ->assertCreated()
         ->assertJsonPath('data.title', 'Senior Laravel Engineer')
-        ->assertJsonPath('data.moderation_status', 'pending');
+        ->assertJsonPath('data.approval_status', 'pending');
 
     $this->assertDatabaseHas('job_listings', [
         'employer_id' => $employer->id,
         'title' => 'Senior Laravel Engineer',
-        'moderation_status' => 'pending',
+        'approval_status' => 'pending',
     ]);
 });
 
@@ -58,7 +58,7 @@ test('listing owners can list view update and delete their jobs', function () {
     $job = JobListing::factory()->create([
         'employer_id' => $employer->id,
         'title' => 'Original title',
-        'moderation_status' => 'approved',
+        'approval_status' => 'approved',
         'published_at' => now()->subDay(),
     ]);
 
@@ -76,7 +76,7 @@ test('listing owners can list view update and delete their jobs', function () {
     ]))
         ->assertOk()
         ->assertJsonPath('data.title', 'Updated title')
-        ->assertJsonPath('data.moderation_status', 'pending')
+        ->assertJsonPath('data.approval_status', 'pending')
         ->assertJsonPath('data.published_at', null);
 
     $this->deleteJson("/api/v1/employer/jobs/{$job->id}")->assertNoContent();

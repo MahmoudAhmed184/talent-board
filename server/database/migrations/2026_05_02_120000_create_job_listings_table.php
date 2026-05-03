@@ -13,24 +13,29 @@ return new class extends Migration
     {
         Schema::create('job_listings', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('employer_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('employer_user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('category_id')->constrained('categories');
+            $table->foreignId('location_id')->constrained('locations');
             $table->string('title');
             $table->text('description');
             $table->text('responsibilities')->nullable();
+            $table->json('required_skills')->nullable();
             $table->text('qualifications')->nullable();
-            $table->string('location');
-            $table->string('category');
-            $table->string('work_type');
-            $table->string('experience_level');
             $table->unsignedInteger('salary_min')->nullable();
             $table->unsignedInteger('salary_max')->nullable();
-            $table->string('moderation_status')->default('pending')->index();
+            $table->text('benefits')->nullable();
+            $table->string('work_type');
+            $table->json('technologies')->nullable();
+            $table->string('experience_level');
+            $table->timestamp('application_deadline')->nullable();
+            $table->string('approval_status')->default('pending')->index();
             $table->timestamp('published_at')->nullable()->index();
-            $table->timestamp('expires_at')->nullable()->index();
+            $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->text('rejected_reason')->nullable();
             $table->timestamps();
 
-            $table->index(['employer_id', 'moderation_status']);
-            $table->index(['category', 'work_type', 'experience_level']);
+            $table->index(['employer_user_id', 'approval_status']);
+            $table->index(['category_id', 'work_type', 'experience_level']);
         });
     }
 

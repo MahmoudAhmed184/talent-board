@@ -90,24 +90,35 @@ class JobListingSeeder extends Seeder
             [$salaryMin, $salaryMax] = [$salaryMax, $salaryMin];
         }
 
+        $categoryName = Str::limit($this->categoryForJob($job), 120, '');
+        $category = \App\Models\Category::firstOrCreate(['slug' => Str::slug($categoryName)], ['name' => $categoryName]);
+
+        $locationName = $this->locationForJob($job);
+        $location = \App\Models\Location::firstOrCreate(['slug' => Str::slug($locationName)], ['name' => $locationName]);
+
         JobListing::query()->updateOrCreate(
             [
-                'employer_id' => $employer->id,
+                'employer_user_id' => $employer->id,
                 'title' => Str::limit($this->stringValue(data_get($job, 'title')) ?: 'Remote role', 160, ''),
-                'location' => $this->locationForJob($job),
+                'location_id' => $location->id,
             ],
             [
                 'description' => $description,
                 'responsibilities' => $this->responsibilitiesForJob($job),
                 'qualifications' => $this->qualificationsForJob($job),
-                'category' => Str::limit($this->categoryForJob($job), 120, ''),
+                'category_id' => $category->id,
                 'work_type' => 'remote',
+                'required_skills' => [],
+                'technologies' => [],
+                'benefits' => null,
                 'experience_level' => $this->experienceLevelForJob($job),
                 'salary_min' => $salaryMin,
                 'salary_max' => $salaryMax,
-                'moderation_status' => 'approved',
+                'approval_status' => 'approved',
                 'published_at' => $this->dateValue(data_get($job, 'pubDate')) ?? now(),
-                'expires_at' => $this->dateValue(data_get($job, 'expiryDate')) ?? now()->addDays(60),
+                'application_deadline' => $this->dateValue(data_get($job, 'expiryDate')) ?? now()->addDays(60),
+                'approved_by' => null,
+                'rejected_reason' => null,
             ],
         );
     }

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { useEmployerJobsStore, type ModerationStatus } from '../../stores/useEmployerJobsStore'
+import { useEmployerJobsStore, type ApprovalStatus } from '../../stores/useEmployerJobsStore'
 
 const jobsStore = useEmployerJobsStore()
 
-const statusClasses: Record<ModerationStatus, string> = {
+const statusClasses: Record<ApprovalStatus, string> = {
   pending: 'border-amber-200 bg-amber-50 text-amber-800',
   approved: 'border-emerald-200 bg-emerald-50 text-emerald-800',
   rejected: 'border-red-200 bg-red-50 text-red-800',
@@ -12,10 +12,10 @@ const statusClasses: Record<ModerationStatus, string> = {
 
 const totalJobs = computed(() => jobsStore.jobs.length)
 const approvedJobs = computed(
-  () => jobsStore.jobs.filter((job) => job.moderation_status === 'approved').length,
+  () => jobsStore.jobs.filter((job) => job.approval_status === 'approved').length,
 )
 const pendingJobs = computed(
-  () => jobsStore.jobs.filter((job) => job.moderation_status === 'pending').length,
+  () => jobsStore.jobs.filter((job) => job.approval_status === 'pending').length,
 )
 
 async function removeJob(jobId: number) {
@@ -103,9 +103,9 @@ onMounted(async () => {
               <h2 class="text-lg font-semibold text-slate-950">{{ job.title }}</h2>
               <span
                 class="rounded-full border px-2 py-0.5 text-xs font-semibold capitalize"
-                :class="statusClasses[job.moderation_status]"
+                :class="statusClasses[job.approval_status]"
               >
-                {{ job.moderation_status }}
+                {{ job.approval_status }}
               </span>
             </div>
             <p class="mt-1 text-sm text-slate-600">
