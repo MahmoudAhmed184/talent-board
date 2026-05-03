@@ -47,7 +47,10 @@ export function useFormErrors<TFields extends string = string>() {
     return messages && messages.length > 0 ? messages[0] : null;
   };
 
-  const mapApiErrors = (error: ApiErrorPayload): void => {
+  const mapApiErrors = (
+    error: ApiErrorPayload,
+    fieldMap: Partial<Record<string, TFields>> = {},
+  ): void => {
     clearErrors();
 
     const status = error.response?.status ?? error.status;
@@ -57,7 +60,7 @@ export function useFormErrors<TFields extends string = string>() {
     if (status === 422 && dataErrors) {
       const mapped: FormFieldErrors<TFields> = {};
       for (const [key, messages] of Object.entries(dataErrors)) {
-        mapped[key as TFields] = messages;
+        mapped[fieldMap[key] ?? (key as TFields)] = messages;
       }
 
       fieldErrors.value = mapped;
