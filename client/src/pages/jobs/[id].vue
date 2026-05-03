@@ -32,15 +32,62 @@ watch(jobId, (newId, oldId) => {
 })
 
 onMounted(load)
+
+function sentenceCase(value?: string | null): string {
+  if (!value) {
+    return 'Not specified'
+  }
+
+  return value
+    .replaceAll('_', ' ')
+    .replaceAll('-', ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase())
+}
+
+function salaryLabel(): string {
+  const min = selectedJob.value?.salary_min
+  const max = selectedJob.value?.salary_max
+  const formatter = new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 0,
+    style: 'currency',
+    currency: 'USD',
+  })
+
+  if (min && max) {
+    return `${formatter.format(min)} - ${formatter.format(max)}`
+  }
+
+  if (min) {
+    return `From ${formatter.format(min)}`
+  }
+
+  if (max) {
+    return `Up to ${formatter.format(max)}`
+  }
+
+  return 'Salary not listed'
+}
+
+function dateLabel(value?: string | null): string {
+  if (!value) {
+    return 'Not specified'
+  }
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(value))
+}
 </script>
 
 <template>
-  <section class="py-8 sm:py-10">
+  <section class="grid gap-5 py-8 sm:py-10">
     <RouterLink
       to="/jobs"
-      class="mb-4 inline-flex items-center text-sm font-semibold text-emerald-700 hover:text-emerald-800"
+      class="inline-flex w-fit items-center text-sm font-semibold text-emerald-700 hover:text-emerald-800"
     >
-      ← Back to jobs
+      Back to jobs
     </RouterLink>
 
     <div v-if="isDetailLoading" class="grid gap-3" role="status" aria-live="polite" aria-busy="true">
@@ -82,33 +129,72 @@ onMounted(load)
       </RouterLink>
     </div>
 
-    <article v-else class="grid gap-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-      <header>
-        <p class="text-sm font-semibold uppercase tracking-wider text-emerald-700">
-          Job detail
-        </p>
-        <h1 class="mt-2 text-2xl font-semibold text-slate-950 sm:text-3xl">
-          {{ selectedJob.title }}
-        </h1>
-        <p class="mt-2 text-sm text-slate-600">
-          {{ selectedJob.location ?? 'Location not specified' }} ·
-          {{ selectedJob.work_type ?? 'Work type TBD' }}
-        </p>
-      </header>
+    <article v-else class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+      <div class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <header class="border-b border-slate-200 pb-6">
+          <p class="text-sm font-semibold uppercase tracking-wider text-emerald-700">
+            {{ selectedJob.category ?? 'Job detail' }}
+          </p>
+          <h1 class="mt-2 text-3xl font-semibold leading-tight text-slate-950 sm:text-4xl">
+            {{ selectedJob.title }}
+          </h1>
+          <p class="mt-3 text-base font-medium text-slate-700">
+            {{ selectedJob.employer?.company_name ?? 'Hiring company' }}
+          </p>
+          <p class="mt-2 text-sm text-slate-600">
+            {{ selectedJob.location ?? 'Location not specified' }} ·
+            {{ sentenceCase(selectedJob.work_type) }} ·
+            {{ sentenceCase(selectedJob.experience_level) }}
+          </p>
+        </header>
 
-      <section class="grid gap-2">
-        <h2 class="text-base font-semibold text-slate-900">Description</h2>
-        <p class="text-sm leading-7 text-slate-700">
-          {{ selectedJob.description ?? 'No description provided yet.' }}
-        </p>
-      </section>
+        <section class="mt-6 grid gap-3">
+          <h2 class="text-lg font-semibold text-slate-900">Description</h2>
+          <p class="whitespace-pre-line text-sm leading-7 text-slate-700">
+            {{ selectedJob.description ?? 'No description provided yet.' }}
+          </p>
+        </section>
 
-      <section class="grid gap-2">
-        <h2 class="text-base font-semibold text-slate-900">Qualifications</h2>
-        <p class="text-sm leading-7 text-slate-700">
-          {{ selectedJob.qualifications ?? 'No qualification details provided yet.' }}
-        </p>
-      </section>
+        <section v-if="selectedJob.responsibilities" class="mt-6 grid gap-3">
+          <h2 class="text-lg font-semibold text-slate-900">Responsibilities</h2>
+          <p class="whitespace-pre-line text-sm leading-7 text-slate-700">
+            {{ selectedJob.responsibilities }}
+          </p>
+        </section>
+
+        <section class="mt-6 grid gap-3">
+          <h2 class="text-lg font-semibold text-slate-900">Qualifications</h2>
+          <p class="whitespace-pre-line text-sm leading-7 text-slate-700">
+            {{ selectedJob.qualifications ?? 'No qualification details provided yet.' }}
+          </p>
+        </section>
+      </div>
+
+      <aside class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 class="text-base font-semibold text-slate-950">Listing summary</h2>
+        <dl class="mt-4 grid gap-4 text-sm">
+          <div>
+            <dt class="font-semibold text-slate-900">Company</dt>
+            <dd class="mt-1 text-slate-600">{{ selectedJob.employer?.company_name ?? 'Hiring company' }}</dd>
+          </div>
+          <div>
+            <dt class="font-semibold text-slate-900">Salary</dt>
+            <dd class="mt-1 text-slate-600">{{ salaryLabel() }}</dd>
+          </div>
+          <div>
+            <dt class="font-semibold text-slate-900">Work type</dt>
+            <dd class="mt-1 text-slate-600">{{ sentenceCase(selectedJob.work_type) }}</dd>
+          </div>
+          <div>
+            <dt class="font-semibold text-slate-900">Experience</dt>
+            <dd class="mt-1 text-slate-600">{{ sentenceCase(selectedJob.experience_level) }}</dd>
+          </div>
+          <div>
+            <dt class="font-semibold text-slate-900">Published</dt>
+            <dd class="mt-1 text-slate-600">{{ dateLabel(selectedJob.published_at) }}</dd>
+          </div>
+        </dl>
+      </aside>
     </article>
   </section>
 </template>

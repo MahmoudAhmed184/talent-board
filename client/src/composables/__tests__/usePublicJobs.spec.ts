@@ -20,15 +20,43 @@ describe('usePublicJobs', () => {
     getMock.mockResolvedValueOnce({
       data: {
         data: [{ id: 10, title: 'Frontend Engineer' }],
+        links: {
+          first: '/api/v1/jobs?page=1',
+          last: '/api/v1/jobs?page=3',
+          next: '/api/v1/jobs?page=2',
+          prev: null,
+        },
+        meta: {
+          current_page: 1,
+          from: 1,
+          last_page: 3,
+          per_page: 15,
+          to: 1,
+          total: 31,
+        },
       },
     })
 
     const jobs = usePublicJobs()
-    await jobs.loadJobs('frontend')
+    await jobs.loadJobs({ q: 'frontend', page: 1, per_page: 15 })
 
     expect(jobs.jobs.value).toHaveLength(1)
     expect(jobs.jobs.value[0]?.title).toBe('Frontend Engineer')
+    expect(jobs.paginationLinks.value.next).toBe('/api/v1/jobs?page=2')
+    expect(jobs.paginationMeta.value.total).toBe(31)
     expect(jobs.formError.value).toBe(null)
+    expect(getMock).toHaveBeenCalledWith('/api/v1/jobs', {
+      params: {
+        q: 'frontend',
+        location: undefined,
+        category: undefined,
+        work_type: undefined,
+        experience_level: undefined,
+        date_posted: undefined,
+        page: 1,
+        per_page: 15,
+      },
+    })
   })
 
   it('returns empty list and error message when request fails', async () => {
@@ -45,6 +73,7 @@ describe('usePublicJobs', () => {
     await jobs.loadJobs()
 
     expect(jobs.jobs.value).toEqual([])
+    expect(jobs.paginationMeta.value.total).toBe(0)
     expect(jobs.formError.value).toBe('Unexpected upstream failure.')
   })
 })

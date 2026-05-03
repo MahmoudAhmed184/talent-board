@@ -5,11 +5,11 @@ import type { AuthResourceResponse, LoginPayload, RegisterPayload, UserRole } fr
 
 function roleHome(role: UserRole | null) {
   if (role === 'candidate') {
-    return '/candidate'
+    return '/candidate/applications'
   }
 
   if (role === 'employer') {
-    return '/employer'
+    return '/employer/dashboard'
   }
 
   if (role === 'admin') {

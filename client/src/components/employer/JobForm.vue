@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import {
   useEmployerJobForm,
   type EmployerJobFormData,
@@ -10,10 +10,12 @@ const {
   mode = 'create',
   submitLabel = 'Save job',
   initialValues = {},
+  submitHandler,
 } = defineProps<{
   mode?: 'create' | 'edit';
   submitLabel?: string;
   initialValues?: Partial<EmployerJobFormData>;
+  submitHandler?: (payload: EmployerJobPayload) => Promise<void>;
 }>();
 
 const emit = defineEmits<{
@@ -24,9 +26,22 @@ const emit = defineEmits<{
 const form = useEmployerJobForm({
   initialValues,
   onSubmit: async (payload) => {
+    if (submitHandler) {
+      await submitHandler(payload);
+      return;
+    }
+
     emit('submit', payload);
   },
 });
+
+watch(
+  () => initialValues,
+  (nextValues) => {
+    form.setValues(nextValues);
+  },
+  { deep: true },
+);
 
 const heading = computed(() =>
   mode === 'edit' ? 'Edit job listing' : 'Create job listing',
@@ -99,6 +114,50 @@ const formIsSubmitting = computed(() => form.isSubmitting.value);
         >
           {{ form.getFieldError('description') }}
         </p>
+      </div>
+
+      <div class="field-grid">
+        <div class="field">
+          <label for="job-responsibilities">Responsibilities</label>
+          <textarea
+            id="job-responsibilities"
+            v-model="form.values.responsibilities"
+            rows="4"
+            :aria-invalid="Boolean(form.getFieldError('responsibilities'))"
+            :aria-describedby="
+              form.getFieldError('responsibilities') ? 'job-responsibilities-error' : undefined
+            "
+          />
+          <p
+            v-if="form.getFieldError('responsibilities')"
+            id="job-responsibilities-error"
+            class="field-error"
+            role="alert"
+          >
+            {{ form.getFieldError('responsibilities') }}
+          </p>
+        </div>
+
+        <div class="field">
+          <label for="job-qualifications">Qualifications</label>
+          <textarea
+            id="job-qualifications"
+            v-model="form.values.qualifications"
+            rows="4"
+            :aria-invalid="Boolean(form.getFieldError('qualifications'))"
+            :aria-describedby="
+              form.getFieldError('qualifications') ? 'job-qualifications-error' : undefined
+            "
+          />
+          <p
+            v-if="form.getFieldError('qualifications')"
+            id="job-qualifications-error"
+            class="field-error"
+            role="alert"
+          >
+            {{ form.getFieldError('qualifications') }}
+          </p>
+        </div>
       </div>
 
       <div class="field-grid">
@@ -209,7 +268,19 @@ const formIsSubmitting = computed(() => form.isSubmitting.value);
             type="number"
             min="0"
             step="1"
+            :aria-invalid="Boolean(form.getFieldError('salaryMin'))"
+            :aria-describedby="
+              form.getFieldError('salaryMin') ? 'salary-min-error' : undefined
+            "
           />
+          <p
+            v-if="form.getFieldError('salaryMin')"
+            id="salary-min-error"
+            class="field-error"
+            role="alert"
+          >
+            {{ form.getFieldError('salaryMin') }}
+          </p>
         </div>
 
         <div class="field">
@@ -236,6 +307,25 @@ const formIsSubmitting = computed(() => form.isSubmitting.value);
         </div>
       </div>
 
+      <div class="field">
+        <label for="job-expires-at">Expiration date</label>
+        <input
+          id="job-expires-at"
+          v-model="form.values.expiresAt"
+          type="date"
+          :aria-invalid="Boolean(form.getFieldError('expiresAt'))"
+          :aria-describedby="form.getFieldError('expiresAt') ? 'job-expires-at-error' : undefined"
+        />
+        <p
+          v-if="form.getFieldError('expiresAt')"
+          id="job-expires-at-error"
+          class="field-error"
+          role="alert"
+        >
+          {{ form.getFieldError('expiresAt') }}
+        </p>
+      </div>
+
       <div class="actions">
         <button
           type="button"
@@ -254,3 +344,133 @@ const formIsSubmitting = computed(() => form.isSubmitting.value);
     </form>
   </section>
 </template>
+
+<style scoped>
+.job-form-shell {
+  display: grid;
+  gap: 1.25rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
+}
+
+.job-form-header h1 {
+  color: #020617;
+  font-size: 1.5rem;
+  font-weight: 650;
+  line-height: 2rem;
+}
+
+.job-form-header p,
+.field-error {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.job-form-header p {
+  color: #475569;
+}
+
+.job-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.field-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.field label {
+  color: #334155;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.375rem;
+  color: #020617;
+  font-size: 0.875rem;
+  outline: none;
+  padding: 0.625rem 0.75rem;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: #0891b2;
+  box-shadow: 0 0 0 3px rgb(8 145 178 / 0.15);
+}
+
+.field-error {
+  color: #dc2626;
+}
+
+.form-alert {
+  border: 1px solid #fecaca;
+  border-radius: 0.375rem;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.875rem;
+  padding: 0.625rem 0.75rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.button-primary,
+.button-secondary {
+  align-items: center;
+  border-radius: 0.375rem;
+  display: inline-flex;
+  font-size: 0.875rem;
+  font-weight: 650;
+  height: 2.75rem;
+  justify-content: center;
+  padding: 0 1rem;
+}
+
+.button-primary {
+  background: #0e7490;
+  color: #ffffff;
+}
+
+.button-primary:hover {
+  background: #155e75;
+}
+
+.button-primary:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.button-secondary {
+  border: 1px solid #cbd5e1;
+  color: #334155;
+}
+
+.button-secondary:hover {
+  background: #f1f5f9;
+}
+
+@media (min-width: 640px) {
+  .field-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+</style>

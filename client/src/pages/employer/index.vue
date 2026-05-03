@@ -14,10 +14,10 @@
     </p>
     <div class="mt-5">
       <RouterLink
-        to="/employer/applications"
+        to="/employer/dashboard"
         class="inline-flex h-10 items-center justify-center rounded-md bg-cyan-700 px-4 text-sm font-semibold text-white hover:bg-cyan-800"
       >
-        Review applications
+        Open dashboard
       </RouterLink>
     </div>
   </section>

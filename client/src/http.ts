@@ -21,7 +21,23 @@ interface LaravelValidationResponse {
 
 type UnauthorizedHandler = () => Promise<void> | void
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
+function resolveApiBaseUrl(): string {
+  const configuredUrl = import.meta.env.VITE_API_BASE_URL
+
+  if (configuredUrl && configuredUrl !== 'auto') {
+    return configuredUrl
+  }
+
+  if (typeof window !== 'undefined') {
+    const apiPort = import.meta.env.VITE_API_PORT ?? '8000'
+
+    return `${window.location.protocol}//${window.location.hostname}:${apiPort}`
+  }
+
+  return 'http://127.0.0.1:8000'
+}
+
+const API_BASE_URL = resolveApiBaseUrl()
 
 let unauthorizedHandler: UnauthorizedHandler | undefined
 let unauthorizedHandlerRunning = false

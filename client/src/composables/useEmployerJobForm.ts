@@ -4,12 +4,15 @@ import { useFormErrors, type ApiErrorPayload } from './useFormErrors';
 export const EMPLOYER_JOB_FIELDS = [
   'title',
   'description',
+  'responsibilities',
+  'qualifications',
   'location',
   'category',
   'workType',
   'experienceLevel',
   'salaryMin',
   'salaryMax',
+  'expiresAt',
 ] as const;
 
 export type EmployerJobField = (typeof EMPLOYER_JOB_FIELDS)[number];
@@ -17,23 +20,29 @@ export type EmployerJobField = (typeof EMPLOYER_JOB_FIELDS)[number];
 export interface EmployerJobFormData {
   title: string;
   description: string;
+  responsibilities: string;
+  qualifications: string;
   location: string;
   category: string;
   workType: string;
   experienceLevel: string;
   salaryMin: string;
   salaryMax: string;
+  expiresAt: string;
 }
 
 export interface EmployerJobPayload {
   title: string;
   description: string;
+  responsibilities: string | null;
+  qualifications: string | null;
   location: string;
   category: string;
   work_type: string;
   experience_level: string;
   salary_min: number | null;
   salary_max: number | null;
+  expires_at: string | null;
 }
 
 interface UseEmployerJobFormOptions {
@@ -44,12 +53,15 @@ interface UseEmployerJobFormOptions {
 const defaultValues = (): EmployerJobFormData => ({
   title: '',
   description: '',
+  responsibilities: '',
+  qualifications: '',
   location: '',
   category: '',
   workType: '',
   experienceLevel: '',
   salaryMin: '',
   salaryMax: '',
+  expiresAt: '',
 });
 
 const toNullableNumber = (value: string): number | null => {
@@ -104,12 +116,15 @@ export function useEmployerJobForm(options: UseEmployerJobFormOptions = {}) {
   const normalizedPayload = (): EmployerJobPayload => ({
     title: values.title.trim(),
     description: values.description.trim(),
+    responsibilities: values.responsibilities.trim() || null,
+    qualifications: values.qualifications.trim() || null,
     location: values.location.trim(),
     category: values.category.trim(),
     work_type: values.workType.trim(),
     experience_level: values.experienceLevel.trim(),
     salary_min: toNullableNumber(values.salaryMin),
     salary_max: toNullableNumber(values.salaryMax),
+    expires_at: values.expiresAt || null,
   });
 
   const submit = async (): Promise<boolean> => {
@@ -126,7 +141,13 @@ export function useEmployerJobForm(options: UseEmployerJobFormOptions = {}) {
       await options.onSubmit(normalizedPayload());
       return true;
     } catch (error) {
-      mapApiErrors(error as ApiErrorPayload);
+      mapApiErrors(error as ApiErrorPayload, {
+        work_type: 'workType',
+        experience_level: 'experienceLevel',
+        salary_min: 'salaryMin',
+        salary_max: 'salaryMax',
+        expires_at: 'expiresAt',
+      });
       return false;
     } finally {
       isSubmitting.value = false;
@@ -138,10 +159,21 @@ export function useEmployerJobForm(options: UseEmployerJobFormOptions = {}) {
     clearErrors();
   };
 
+  const setValues = (nextValues: Partial<EmployerJobFormData>): void => {
+    Object.assign(values, defaultValues(), nextValues);
+    clearErrors();
+  };
+
   const applyApiErrors = (
     error: ApiErrorPayload,
   ): void => {
-    mapApiErrors(error);
+    mapApiErrors(error, {
+      work_type: 'workType',
+      experience_level: 'experienceLevel',
+      salary_min: 'salaryMin',
+      salary_max: 'salaryMax',
+      expires_at: 'expiresAt',
+    });
   };
   const getFormError = (): string | null => state.formError.value;
 
@@ -152,6 +184,7 @@ export function useEmployerJobForm(options: UseEmployerJobFormOptions = {}) {
     normalizedPayload,
     submit,
     reset,
+    setValues,
     applyApiErrors,
     getFormError,
     getFieldError,

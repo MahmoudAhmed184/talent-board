@@ -23,6 +23,14 @@ const { state, clearErrors, setFieldError, setFormError, mapApiErrors, getFieldE
   useFormErrors<keyof RegisterPayload>()
 
 function roleHome(role: UserRole) {
+  if (role === 'candidate') {
+    return '/candidate/applications'
+  }
+
+  if (role === 'employer') {
+    return '/employer/dashboard'
+  }
+
   return role === 'admin' ? '/admin' : `/${role}`
 }
 
