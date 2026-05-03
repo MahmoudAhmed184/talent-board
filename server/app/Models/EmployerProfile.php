@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Table('employer_profiles')]
 #[Fillable([
@@ -19,8 +20,8 @@ use Illuminate\Database\Eloquent\Model;
 #[Hidden(['logo_disk', 'logo_path'])]
 class EmployerProfile extends Model
 {
-    /**
-     * TODO: add User <-> EmployerProfile relationship methods
-     * once user/auth domain wiring is finalized.
-     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 }
