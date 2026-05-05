@@ -12,6 +12,7 @@
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../features/auth/stores/useAuthStore'
+import { useAuth } from '../../features/auth/composables/useAuth'
 import {
   LayoutDashboard,
   FileText,
@@ -25,6 +26,7 @@ import {
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { logout } = useAuth()
 
 const isSidebarOpen = ref(false)
 
@@ -36,7 +38,7 @@ const navItems = [
 ]
 
 async function handleLogout() {
-  await authStore.logout()
+  await logout()
   router.push('/')
 }
 </script>

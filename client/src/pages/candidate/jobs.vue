@@ -99,7 +99,7 @@ async function submitApplication() {
     })
     
     applicationStore.markJobAsApplied(selectedJob.value.id)
-    showSuccess('Application submitted successfully')
+    showSuccess(`Successfully applied to ${selectedJob.value.title}`)
     closeApplyModal()
   } catch (error: any) {
     showError(error.response?.data?.message || 'Failed to submit application')
