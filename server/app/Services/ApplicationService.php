@@ -72,4 +72,39 @@ class ApplicationService
 
         return $updated;
     }
+
+    public function listForCandidate(
+        User $candidate,
+        int $perPage = 15,
+        ?ApplicationStatus $status = null,
+        ?string $fromDate = null,
+        ?string $toDate = null,
+    ): LengthAwarePaginator {
+        return $this->applications->paginateForCandidate($candidate, $perPage, $status, $fromDate, $toDate);
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    public function cancelApplication(User $candidate, Application $application): Application
+    {
+        abort_unless($application->candidate_id === $candidate->id, 403);
+
+        $updated = DB::transaction(function () use ($candidate, $application): Application {
+            $application = $this->applications->lock($application);
+            abort_unless($application, 404);
+
+            if (! in_array($application->status, [ApplicationStatus::Submitted, ApplicationStatus::UnderReview], true)) {
+                throw ValidationException::withMessages([
+                    'status' => 'Only submitted or under-review applications can be cancelled.',
+                ]);
+            }
+
+            return $this->applications->cancel($application);
+        });
+
+        event(ApplicationStatusChanged::fromApplication($updated));
+
+        return $updated;
+    }
 }

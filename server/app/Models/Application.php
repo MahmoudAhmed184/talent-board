@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'resume_original_name',
     'contact_email',
     'contact_phone',
+    'resume_id',
     'submitted_at',
     'decided_by_user_id',
     'decided_at',
@@ -62,6 +63,11 @@ class Application extends Model
     public function jobListing(): BelongsTo
     {
         return $this->belongsTo(JobListing::class);
+    }
+
+    public function resume(): BelongsTo
+    {
+        return $this->belongsTo(Resume::class);
     }
 
     public function decisionActor(): BelongsTo

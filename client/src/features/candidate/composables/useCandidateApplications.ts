@@ -1,0 +1,45 @@
+import { ref } from 'vue'
+import { http } from '../../../http'
+import type { CandidateApplication } from '../types'
+import type { JsonApiPaginatedResponse } from '../../../types/pagination'
+
+interface FetchApplicationsParams {
+  page?: number
+  status?: string
+  from_date?: string
+  to_date?: string
+}
+
+export function useCandidateApplications() {
+  const isCancelling = ref(false)
+
+  async function fetchApplications(page = 1, params?: FetchApplicationsParams): Promise<JsonApiPaginatedResponse<CandidateApplication>> {
+    const query = { page, ...params }
+    const response = await http.get<JsonApiPaginatedResponse<CandidateApplication>>('/api/v1/candidate/applications', {
+      params: query,
+    })
+    return response.data
+  }
+
+  async function cancelApplication(id: number): Promise<CandidateApplication> {
+    isCancelling.value = true
+    try {
+      const response = await http.delete<{ data: CandidateApplication }>(`/api/v1/candidate/applications/${id}`)
+      return response.data.data
+    } finally {
+      isCancelling.value = false
+    }
+  }
+
+  async function fetchAppliedJobIds(): Promise<number[]> {
+    const response = await http.get<{ data: number[] }>('/api/v1/candidate/applications/applied-ids')
+    return response.data.data
+  }
+
+  return {
+    cancelApplication,
+    fetchApplications,
+    fetchAppliedJobIds,
+    isCancelling,
+  }
+}

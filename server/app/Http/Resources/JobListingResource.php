@@ -28,7 +28,7 @@ class JobListingResource extends JsonResource
             'salary_max' => $this->salary_max,
             'approval_status' => $this->approval_status,
             'published_at' => $this->published_at?->toIso8601String(),
-            'expires_at' => $this->expires_at?->toIso8601String(),
+            'expires_at' => $this->application_deadline?->toIso8601String(),
             'employer' => $this->whenLoaded('employer', fn (): array => [
                 'id' => $this->employer?->id,
                 'name' => $this->employer?->name,

@@ -7,6 +7,10 @@ use Illuminate\Support\Facades\Route;
 Route::apiResource('jobs', JobListingController::class)
     ->parameters(['jobs' => 'jobListing']);
 
+Route::get('/profile', [\App\Http\Controllers\Api\V1\Employer\EmployerProfileController::class, 'show']);
+Route::patch('/profile', [\App\Http\Controllers\Api\V1\Employer\EmployerProfileController::class, 'update']);
+Route::delete('/company-logo', [\App\Http\Controllers\Api\V1\Employer\EmployerProfileController::class, 'destroyLogo']);
+
 Route::prefix('applications')->name('applications.')->group(function (): void {
     Route::get('/', [ApplicationController::class, 'index'])->name('index');
     Route::get('{application}', [ApplicationController::class, 'show'])->name('show');
