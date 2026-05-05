@@ -29,6 +29,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(EmployerProfileRepositoryInterface::class, EloquentEmployerProfileRepository::class);
         $this->app->bind(JobListingRepositoryInterface::class, EloquentJobListingRepository::class);
         $this->app->bind(ApplicationRepositoryInterface::class, EloquentApplicationRepository::class);
+        $this->app->bind(\App\Repositories\Contracts\CandidateProfileRepositoryInterface::class, \App\Repositories\EloquentCandidateProfileRepository::class);
+        $this->app->bind(\App\Repositories\Contracts\ResumeRepositoryInterface::class, \App\Repositories\EloquentResumeRepository::class);
+        $this->app->bind(\App\Repositories\Contracts\NotificationRepositoryInterface::class, \App\Repositories\EloquentNotificationRepository::class);
     }
 
     /**

@@ -30,6 +30,26 @@ class EloquentApplicationRepository implements ApplicationRepositoryInterface
             ->first();
     }
 
+    public function paginateForCandidate(User $candidate, int $perPage, ?ApplicationStatus $status): LengthAwarePaginator
+    {
+        return Application::query()
+            ->with(['jobListing:id,title,employer_user_id', 'jobListing.employer:id', 'jobListing.employer.employerProfile:id,user_id,company_name', 'resume:id,original_name'])
+            ->where('candidate_id', $candidate->id)
+            ->when($status, fn ($query) => $query->where('status', $status->value))
+            ->latest('submitted_at')
+            ->latest('id')
+            ->paginate($perPage);
+    }
+
+    public function findForCandidate(User $candidate, Application $application): ?Application
+    {
+        return Application::query()
+            ->with(['jobListing:id,title,employer_user_id', 'jobListing.employer:id', 'jobListing.employer.employerProfile:id,user_id,company_name', 'resume:id,original_name'])
+            ->whereKey($application->getKey())
+            ->where('candidate_id', $candidate->id)
+            ->first();
+    }
+
     public function lock(Application $application): ?Application
     {
         return Application::query()
@@ -41,10 +61,30 @@ class EloquentApplicationRepository implements ApplicationRepositoryInterface
     /**
      * @param  array<string, mixed>  $attributes
      */
+    public function create(array $attributes): Application
+    {
+        $application = Application::create($attributes);
+
+        return $application->refresh()->loadMissing(['jobListing:id,title,employer_user_id', 'jobListing.employer:id', 'jobListing.employer.employerProfile:id,user_id,company_name', 'resume:id,original_name']);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
     public function update(Application $application, array $attributes): Application
     {
         $application->update($attributes);
 
-        return $application->refresh()->loadMissing(['candidate:id,name,email', 'jobListing:id,title,employer_id']);
+        return $application->refresh()->loadMissing(['candidate:id,name,email', 'jobListing:id,title,employer_user_id']);
+    }
+
+    public function cancel(Application $application): Application
+    {
+        $application->update([
+            'status' => ApplicationStatus::Cancelled,
+            'decided_at' => now(),
+        ]);
+
+        return $application->refresh()->loadMissing(['jobListing:id,title,employer_user_id', 'jobListing.employer:id', 'jobListing.employer.employerProfile:id,user_id,company_name', 'resume:id,original_name']);
     }
 }
