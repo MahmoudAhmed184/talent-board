@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import ApplicationStatusBadge from '../../components/ApplicationStatusBadge.vue'
 import { useEcho, type ApplicationStatusChangedPayload } from '../../composables/useEcho'
 import { useAuthStore } from '../../features/auth/stores/useAuthStore'
 import { useCandidateApplicationsStore } from '../../features/candidate/stores/useCandidateApplicationsStore'
@@ -8,6 +7,8 @@ import Pagination from '../../components/Pagination.vue'
 import { useToast } from '../../composables/useToast'
 import AppModal from '../../components/AppModal.vue'
 import AppButton from '../../components/AppButton.vue'
+import { Search, Filter, Briefcase, Calendar, FileText, XCircle } from 'lucide-vue-next'
+import { format } from 'date-fns'
 
 const authStore = useAuthStore()
 const store = useCandidateApplicationsStore()
@@ -28,7 +29,6 @@ onMounted(async () => {
     `application-status.candidate.${authStore.user.id}`,
     '.ApplicationStatusChanged',
     (payload) => {
-      // Update local state if we have the application in view
       const index = store.applications.findIndex(a => a.id === payload.application_id)
       if (index !== -1) {
         store.applications[index].status = payload.status
@@ -73,91 +73,126 @@ function onStatusFilterChange(event: Event) {
   const target = event.target as HTMLSelectElement
   store.setFilterAndLoad(target.value || undefined)
 }
+
+function getStatusBadge(status: string) {
+  switch (status) {
+    case 'accepted': return 'bg-emerald-100 text-emerald-800 border-emerald-200'
+    case 'rejected': return 'bg-red-100 text-red-800 border-red-200'
+    case 'under_review':
+    case 'pending': 
+    case 'submitted': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+    default: return 'bg-slate-100 text-slate-800 border-slate-200'
+  }
+}
+
+function getStatusLabel(status: string) {
+  switch (status) {
+    case 'under_review': return 'Under Review'
+    default: return status.charAt(0).toUpperCase() + status.slice(1)
+  }
+}
 </script>
 
 <template>
-  <div class="max-w-5xl mx-auto py-8 px-4">
-    <div class="flex items-center justify-between mb-8">
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-3xl font-bold text-white">My Applications</h1>
-        <p class="mt-2 text-sm text-gray-400">
-          Track the status of your job applications
-        </p>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Applications</h1>
+        <p class="mt-1 text-sm text-slate-500">Track and manage your job applications.</p>
       </div>
-      
+
       <div class="flex items-center gap-3">
-        <label class="text-sm text-gray-300">Filter by Status:</label>
-        <select
-          :value="store.currentStatusFilter || ''"
-          @change="onStatusFilterChange"
-          class="rounded-md bg-gray-800 border-gray-700 text-white focus:border-indigo-500 focus:ring-indigo-500 text-sm"
-        >
-          <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">
-            {{ opt.label }}
-          </option>
-        </select>
+        <div class="relative">
+          <Filter class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <select
+            :value="store.currentStatusFilter || ''"
+            @change="onStatusFilterChange"
+            class="pl-9 pr-8 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 appearance-none shadow-sm transition-all"
+          >
+            <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+        </div>
       </div>
     </div>
 
-    <div v-if="store.isFetching" class="py-12 flex justify-center">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+    <!-- Loading State -->
+    <div v-if="store.isFetching" class="py-12 flex justify-center bg-white rounded-xl border border-slate-200 shadow-sm">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
     </div>
 
-    <div v-else-if="store.applications.length === 0" class="bg-gray-800 rounded-lg p-12 text-center border border-gray-700">
-      <p class="text-gray-300 text-lg">No applications found.</p>
-      <p class="text-gray-500 mt-2 text-sm">You haven't submitted any applications that match the current filters.</p>
+    <!-- Empty State -->
+    <div v-else-if="store.applications.length === 0" class="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
+      <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+        <Briefcase class="w-8 h-8 text-slate-400" />
+      </div>
+      <h3 class="text-lg font-semibold text-slate-900">No applications found</h3>
+      <p class="text-slate-500 mt-2 text-sm max-w-sm mx-auto">You haven't submitted any applications that match the current filters.</p>
+      <RouterLink to="/candidate/jobs" class="mt-6 inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors shadow-sm gap-2">
+        Browse Jobs <Briefcase class="w-4 h-4" />
+      </RouterLink>
     </div>
 
-    <div v-else class="space-y-4">
-      <div
-        v-for="app in store.applications"
-        :key="app.id"
-        class="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-gray-600 transition-colors"
-      >
-        <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
-          <div>
-            <h2 class="text-xl font-semibold text-white">
-              {{ app.job_listing?.title }}
-            </h2>
-            <p class="text-gray-400 mt-1">
-              at {{ app.job_listing?.employer?.company_name || 'Unknown Company' }}
-            </p>
-            
-            <div class="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-sm text-gray-400">
-              <div>
-                <span class="font-medium text-gray-300">Applied:</span>
-                {{ new Date(app.submitted_at).toLocaleDateString() }}
+    <!-- List -->
+    <div v-else class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="divide-y divide-slate-100">
+        <div
+          v-for="app in store.applications"
+          :key="app.id"
+          class="p-6 hover:bg-slate-50/50 transition-colors"
+        >
+          <div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-3 mb-2">
+                <h2 class="text-lg font-semibold text-slate-900 truncate">
+                  {{ app.job_listing?.title }}
+                </h2>
+                <span :class="['inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold shadow-sm', getStatusBadge(app.status)]">
+                  {{ getStatusLabel(app.status) }}
+                </span>
               </div>
-              <div v-if="app.submission_mode === 'resume'">
-                <span class="font-medium text-gray-300">Resume:</span>
-                {{ app.resume?.original_name || 'Attached' }}
+              
+              <div class="flex flex-wrap items-center gap-4 text-sm text-slate-500">
+                <div class="flex items-center gap-1.5">
+                  <Briefcase class="w-4 h-4 text-slate-400" />
+                  <span class="truncate">{{ app.job_listing?.employer?.company_name || 'Unknown Company' }}</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <Calendar class="w-4 h-4 text-slate-400" />
+                  <span>Applied {{ format(new Date(app.submitted_at), 'MMM d, yyyy') }}</span>
+                </div>
+                <div v-if="app.resume?.original_name" class="flex items-center gap-1.5">
+                  <FileText class="w-4 h-4 text-slate-400" />
+                  <span class="truncate max-w-[200px]">{{ app.resume.original_name }}</span>
+                </div>
               </div>
-              <div v-else>
-                <span class="font-medium text-gray-300">Method:</span>
-                Profile Contact
+              
+              <div v-if="app.decision?.note" class="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-100">
+                <p class="text-sm text-slate-700">
+                  <span class="font-medium text-slate-900 block mb-1">Feedback:</span> 
+                  {{ app.decision.note }}
+                </p>
               </div>
             </div>
             
-            <div v-if="app.decision?.note" class="mt-4 p-3 bg-gray-900 rounded-md border border-gray-700">
-              <p class="text-sm text-gray-300"><span class="font-medium">Employer Note:</span> {{ app.decision.note }}</p>
+            <div class="flex items-center md:flex-col justify-end gap-3 shrink-0">
+              <button
+                v-if="['submitted', 'under_review'].includes(app.status)"
+                @click="confirmCancel(app.id)"
+                class="inline-flex items-center justify-center rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors gap-2"
+              >
+                <XCircle class="w-4 h-4" />
+                Cancel
+              </button>
             </div>
-          </div>
-          
-          <div class="flex flex-col items-end gap-3 min-w-[120px]">
-            <ApplicationStatusBadge :status="app.status as any" />
-            
-            <button
-              v-if="['submitted', 'under_review'].includes(app.status)"
-              @click="confirmCancel(app.id)"
-              class="text-sm text-red-400 hover:text-red-300 font-medium transition-colors"
-            >
-              Cancel Application
-            </button>
           </div>
         </div>
       </div>
       
-      <div class="mt-8 flex justify-center">
+      <!-- Pagination -->
+      <div v-if="store.meta && store.meta.last_page > 1" class="border-t border-slate-200 p-4 flex justify-center bg-slate-50">
         <Pagination
           :links="store.links"
           :meta="store.meta"
@@ -166,31 +201,38 @@ function onStatusFilterChange(event: Event) {
       </div>
     </div>
     
+    <!-- Cancel Modal -->
     <AppModal
       :is-open="cancelModalOpen"
       title="Cancel Application"
       @close="cancelModalOpen = false"
     >
-      <p class="text-gray-300 mb-6">
-        Are you sure you want to cancel this application? This action cannot be undone, and the employer will see that you have withdrawn your application.
-      </p>
-      
-      <div class="flex justify-end gap-3">
-        <AppButton
-          variant="secondary"
-          @click="cancelModalOpen = false"
-          :disabled="store.isCancelling"
-        >
-          Keep Application
-        </AppButton>
+      <div class="p-1">
+        <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
+          <XCircle class="w-6 h-6 text-red-600" />
+        </div>
+        <h3 class="text-lg font-semibold text-slate-900 mb-2">Are you sure?</h3>
+        <p class="text-slate-600 mb-6 text-sm">
+          Are you sure you want to cancel this application? This action cannot be undone and the employer will be notified.
+        </p>
         
-        <AppButton
-          variant="danger"
-          @click="doCancel"
-          :disabled="store.isCancelling"
-        >
-          {{ store.isCancelling ? 'Cancelling...' : 'Yes, Cancel' }}
-        </AppButton>
+        <div class="flex justify-end gap-3">
+          <button
+            @click="cancelModalOpen = false"
+            :disabled="store.isCancelling"
+            class="px-4 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors border border-transparent"
+          >
+            Keep it
+          </button>
+          
+          <button
+            @click="doCancel"
+            :disabled="store.isCancelling"
+            class="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ store.isCancelling ? 'Cancelling...' : 'Yes, cancel application' }}
+          </button>
+        </div>
       </div>
     </AppModal>
   </div>

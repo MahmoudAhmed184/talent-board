@@ -4,6 +4,7 @@ import { useCandidateProfileStore } from '../../features/candidate/stores/useCan
 import ResumeUpload from '../../features/candidate/components/ResumeUpload.vue'
 import type { Resume } from '../../features/candidate/types'
 import { useToast } from '../../composables/useToast'
+import { Save, User as UserIcon, MapPin, Phone, FileText, CheckCircle, Trash2, ShieldCheck, Tag } from 'lucide-vue-next'
 
 const store = useCandidateProfileStore()
 const { success: showSuccess, error: showError } = useToast()
@@ -72,7 +73,6 @@ async function deleteResume(id: number) {
     const { deleteResume } = await import('../../features/candidate/composables/useCandidateProfile').then(m => m.useCandidateProfile())
     await deleteResume(id)
     
-    // If deleted the default resume, update store
     if (store.defaultResumeId === id) {
       await store.loadProfile()
     }
@@ -88,7 +88,6 @@ function onResumeUploaded(resume: Resume) {
   showSuccess('Resume uploaded successfully')
   resumes.value.unshift(resume)
   
-  // Set as default if it's the first one
   if (!store.defaultResumeId) {
     setDefaultResume(resume.id)
   }
@@ -96,126 +95,158 @@ function onResumeUploaded(resume: Resume) {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto py-8 px-4">
-    <h1 class="text-3xl font-bold mb-8 text-white">My Profile</h1>
+  <div class="space-y-6">
+    <!-- Header -->
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900">My Profile</h1>
+      <p class="mt-1 text-sm text-slate-500">Manage your personal information and resumes.</p>
+    </div>
     
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Profile Form -->
-      <div class="md:col-span-2 bg-gray-800 rounded-lg shadow p-6 border border-gray-700">
-        <h2 class="text-xl font-semibold mb-6 text-white">Personal Information</h2>
-        
-        <form @submit.prevent="saveProfile" class="space-y-6">
-          <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Professional Summary</label>
-            <textarea
-              v-model="summary"
-              rows="4"
-              class="w-full rounded-md bg-gray-900 border-gray-600 text-white focus:border-indigo-500 focus:ring-indigo-500"
-              placeholder="A brief summary of your experience and goals"
-            ></textarea>
+      <div class="lg:col-span-2">
+        <form @submit.prevent="saveProfile" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
+          <div class="p-6 border-b border-slate-100 flex items-center gap-2">
+            <UserIcon class="w-5 h-5 text-emerald-600" />
+            <h2 class="text-lg font-semibold text-slate-900">Personal Information</h2>
           </div>
           
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="p-6 space-y-6 flex-1">
+            <!-- Summary -->
             <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Location</label>
-              <input
-                v-model="locationText"
-                type="text"
-                class="w-full rounded-md bg-gray-900 border-gray-600 text-white focus:border-indigo-500 focus:ring-indigo-500"
-                placeholder="e.g. San Francisco, CA"
-              >
+              <label class="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1.5">
+                <FileText class="w-4 h-4 text-slate-400" /> Professional Summary
+              </label>
+              <textarea
+                v-model="summary"
+                rows="4"
+                class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 focus:outline-none transition-colors shadow-sm"
+                placeholder="A brief summary of your experience and goals"
+              ></textarea>
             </div>
             
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <!-- Location -->
+              <div>
+                <label class="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1.5">
+                  <MapPin class="w-4 h-4 text-slate-400" /> Location
+                </label>
+                <input
+                  v-model="locationText"
+                  type="text"
+                  class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 focus:outline-none transition-colors shadow-sm"
+                  placeholder="e.g. San Francisco, CA"
+                >
+              </div>
+              
+              <!-- Phone -->
+              <div>
+                <label class="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1.5">
+                  <Phone class="w-4 h-4 text-slate-400" /> Phone
+                </label>
+                <input
+                  v-model="phone"
+                  type="tel"
+                  class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 focus:outline-none transition-colors shadow-sm"
+                  placeholder="+1 (555) 000-0000"
+                >
+              </div>
+            </div>
+            
+            <!-- Skills -->
             <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Phone</label>
+              <label class="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1.5">
+                <Tag class="w-4 h-4 text-slate-400" /> Skills
+              </label>
               <input
-                v-model="phone"
-                type="tel"
-                class="w-full rounded-md bg-gray-900 border-gray-600 text-white focus:border-indigo-500 focus:ring-indigo-500"
-                placeholder="+1 (555) 000-0000"
+                v-model="skillsText"
+                type="text"
+                class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-emerald-500 focus:ring-emerald-500/20 focus:outline-none transition-colors shadow-sm"
+                placeholder="Vue.js, Laravel, Tailwind CSS"
               >
+              <p class="mt-1.5 text-xs text-slate-500">Separate skills with commas.</p>
             </div>
           </div>
           
-          <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Skills (comma separated)</label>
-            <input
-              v-model="skillsText"
-              type="text"
-              class="w-full rounded-md bg-gray-900 border-gray-600 text-white focus:border-indigo-500 focus:ring-indigo-500"
-              placeholder="Vue.js, Laravel, TypeScript"
-            >
-          </div>
-          
-          <div class="flex justify-end">
+          <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
             <button
               type="submit"
-              class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
+              class="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50"
               :disabled="store.isUpdating"
             >
-              {{ store.isUpdating ? 'Saving...' : 'Save Profile' }}
+              <Save class="w-4 h-4" />
+              {{ store.isUpdating ? 'Saving...' : 'Save Changes' }}
             </button>
           </div>
         </form>
       </div>
       
       <!-- Resumes Sidebar -->
-      <div class="space-y-6">
-        <div class="bg-gray-800 rounded-lg shadow p-6 border border-gray-700">
-          <h2 class="text-xl font-semibold mb-6 text-white">Resumes</h2>
-          
-          <ResumeUpload
-            v-if="resumes.length < 3"
-            @uploaded="onResumeUploaded"
-            @error="showError"
-          />
-          <div v-else class="p-4 bg-amber-900/20 border border-amber-700/50 rounded-md">
-            <p class="text-sm text-amber-400">
-              You have reached the limit of 3 resumes. Delete an existing one to upload a new version.
-            </p>
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-full flex flex-col">
+          <div class="p-6 border-b border-slate-100 flex items-center gap-2">
+            <FileText class="w-5 h-5 text-emerald-600" />
+            <h2 class="text-lg font-semibold text-slate-900">Resumes</h2>
           </div>
           
-          <div class="mt-6 space-y-4">
-            <p v-if="resumes.length === 0" class="text-gray-400 text-sm text-center py-4">
-              No resumes uploaded yet.
-            </p>
+          <div class="p-6 flex-1 flex flex-col">
+            <ResumeUpload
+              v-if="resumes.length < 3"
+              @uploaded="onResumeUploaded"
+              @error="showError"
+            />
+            <div v-else class="p-4 bg-amber-50 rounded-lg border border-amber-200 flex items-start gap-3">
+              <ShieldCheck class="w-5 h-5 text-amber-600 shrink-0" />
+              <p class="text-sm text-amber-800">
+                You have reached the maximum of 3 resumes. Please delete an older one to upload a new version.
+              </p>
+            </div>
             
-            <div
-              v-for="resume in resumes"
-              :key="resume.id"
-              class="bg-gray-900 rounded-md p-4 border flex flex-col gap-3 transition-colors"
-              :class="store.defaultResumeId === resume.id ? 'border-indigo-500' : 'border-gray-700 hover:border-gray-600'"
-            >
-              <div class="flex items-start justify-between">
-                <div class="flex flex-col overflow-hidden">
-                  <span class="text-sm font-medium text-gray-200 truncate" :title="resume.original_name">
-                    {{ resume.original_name }}
-                  </span>
-                  <span class="text-xs text-gray-500 mt-1">
-                    {{ new Date(resume.created_at).toLocaleDateString() }}
+            <div class="mt-8 space-y-3 flex-1">
+              <div v-if="resumes.length === 0" class="h-32 flex flex-col items-center justify-center text-center">
+                <FileText class="w-8 h-8 text-slate-300 mb-2" />
+                <p class="text-sm text-slate-500">No resumes uploaded yet.</p>
+              </div>
+              
+              <div
+                v-for="resume in resumes"
+                :key="resume.id"
+                class="group flex flex-col rounded-xl border p-4 transition-all"
+                :class="store.defaultResumeId === resume.id ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-200 bg-white hover:border-slate-300'"
+              >
+                <div class="flex items-start justify-between gap-2">
+                  <div class="min-w-0 flex-1">
+                    <p class="text-sm font-medium text-slate-900 truncate" :title="resume.original_name">
+                      {{ resume.original_name }}
+                    </p>
+                    <p class="text-xs text-slate-500 mt-0.5">
+                      Uploaded {{ new Date(resume.created_at).toLocaleDateString() }}
+                    </p>
+                  </div>
+                  
+                  <span v-if="store.defaultResumeId === resume.id" class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 shrink-0">
+                    <CheckCircle class="w-3 h-3" /> Default
                   </span>
                 </div>
                 
-                <span v-if="store.defaultResumeId === resume.id" class="px-2 py-1 bg-indigo-500/20 text-indigo-300 text-xs rounded-full border border-indigo-500/30">
-                  Default
-                </span>
-              </div>
-              
-              <div class="flex items-center gap-2 mt-2 pt-3 border-t border-gray-800">
-                <button
-                  v-if="store.defaultResumeId !== resume.id"
-                  @click="setDefaultResume(resume.id)"
-                  class="text-xs text-indigo-400 hover:text-indigo-300 font-medium"
-                >
-                  Set as Default
-                </button>
-                <div class="flex-grow"></div>
-                <button
-                  @click="deleteResume(resume.id)"
-                  class="text-xs text-red-400 hover:text-red-300 font-medium"
-                >
-                  Delete
-                </button>
+                <div class="mt-4 flex items-center justify-between pt-3 border-t" :class="store.defaultResumeId === resume.id ? 'border-emerald-200' : 'border-slate-100'">
+                  <button
+                    v-if="store.defaultResumeId !== resume.id"
+                    @click="setDefaultResume(resume.id)"
+                    class="text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
+                  >
+                    Set as Default
+                  </button>
+                  <span v-else class="text-xs text-emerald-600 font-medium">Active Default</span>
+                  
+                  <button
+                    @click="deleteResume(resume.id)"
+                    class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Delete Resume"
+                  >
+                    <Trash2 class="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
