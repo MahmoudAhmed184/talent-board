@@ -20,6 +20,14 @@ class DatabaseSeeder extends Seeder
         $this->call(JobListingSeeder::class);
         $this->call(CandidateProfileSeeder::class);
         $this->call(ResumeSeeder::class);
+
+        $employer = \App\Models\User::where('email', 'employer@example.com')->first();
+        if ($employer) {
+            \App\Models\JobListing::factory()->count(8)->approved()->create([
+                'employer_user_id' => $employer->id,
+            ]);
+        }
+
         $this->call(ApplicationSeeder::class);
     }
 }
