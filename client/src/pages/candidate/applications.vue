@@ -42,12 +42,6 @@ onMounted(async () => {
   )
 })
 
-onUnmounted(() => {
-  if (authStore.user?.id) {
-    echo.leaveChannel(`application-status.candidate.${authStore.user.id}`)
-  }
-})
-
 function confirmCancel(id: number) {
   appToCancel.value = id
   cancelModalOpen.value = true
@@ -165,9 +159,9 @@ function onStatusFilterChange(event: Event) {
       
       <div class="mt-8 flex justify-center">
         <Pagination
-          :current-page="store.currentPage"
-          :last-page="store.lastPage"
-          @change="store.loadPage"
+          :links="store.links"
+          :meta="store.meta"
+          @page-change="store.loadPage"
         />
       </div>
     </div>

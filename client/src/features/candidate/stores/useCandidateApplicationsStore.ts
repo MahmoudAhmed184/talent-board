@@ -5,36 +5,21 @@ import type { CandidateApplication } from '../types'
 import { usePagination } from '../../../composables/usePagination'
 
 export const useCandidateApplicationsStore = defineStore('candidate-applications', () => {
-  const applications = ref<CandidateApplication[]>([])
   const { fetchApplications, cancelApplication: apiCancelApplication, isCancelling } = useCandidateApplications()
   
-  const {
-    currentPage,
-    lastPage,
-    perPage,
-    total,
-    isFirstPage,
-    isLastPage,
-    nextPage,
-    prevPage,
-    setPaginationFromMeta
-  } = usePagination(loadPage)
-
-  const isFetching = ref(false)
   const currentStatusFilter = ref<string | undefined>(undefined)
 
-  async function loadPage(page: number) {
-    isFetching.value = true
-    try {
-      const response = await fetchApplications(page, {
-        status: currentStatusFilter.value,
-      })
-      applications.value = response.data
-      setPaginationFromMeta(response.meta)
-    } finally {
-      isFetching.value = false
-    }
-  }
+  const {
+    items: applications,
+    links,
+    meta,
+    currentPage,
+    lastPage,
+    isLoading: isFetching,
+    loadPage,
+  } = usePagination<CandidateApplication>({
+    fetchPage: (page) => fetchApplications(page, { status: currentStatusFilter.value })
+  })
 
   async function setFilterAndLoad(status?: string) {
     currentStatusFilter.value = status
@@ -58,14 +43,10 @@ export const useCandidateApplicationsStore = defineStore('candidate-applications
     currentStatusFilter,
     isCancelling,
     isFetching,
-    isFirstPage,
-    isLastPage,
     lastPage,
+    links,
     loadPage,
-    nextPage,
-    perPage,
-    prevPage,
+    meta,
     setFilterAndLoad,
-    total,
   }
 })
