@@ -40,6 +40,12 @@ class ResumeController extends Controller
         $user = $request->user();
         $this->authorize('create', Resume::class);
 
+        if ($user->resumes()->count() >= 3) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'file' => ['You can only have up to 3 resumes.'],
+            ]);
+        }
+
         $file = $request->file('file');
         $metadata = $this->storage->storeResume($file, $user);
 

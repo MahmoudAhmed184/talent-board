@@ -17,9 +17,7 @@ class StoreApplicationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'submission_mode' => ['required', 'string', 'in:resume,contact'],
-            'resume_id' => ['required_if:submission_mode,resume', 'exists:resumes,id'],
-            'use_profile_contact' => ['required', 'boolean'],
+            'resume_id' => ['required', 'exists:resumes,id'],
             'cover_letter' => ['nullable', 'string', 'max:2000'],
         ];
     }

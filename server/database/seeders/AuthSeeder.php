@@ -66,7 +66,7 @@ class AuthSeeder extends Seeder
                 'role' => UserRole::Employer,
                 'email_verified_at' => now(),
             ]);
-            
+
             \App\Models\EmployerProfile::query()->updateOrCreate(
                 ['user_id' => $emp->id],
                 ['company_name' => "Company $i Inc."]

@@ -2,9 +2,20 @@
 import { computed } from 'vue'
 import ToastHost from '../components/ToastHost.vue'
 import { useAuthStore } from '../features/auth/stores/useAuthStore'
+import { useAuth } from '../features/auth/composables/useAuth'
+import { useRouter } from 'vue-router'
 import { LogOut } from 'lucide-vue-next'
 
+const router = useRouter()
+const { logout } = useAuth()
+
 const authStore = useAuthStore()
+
+const handleLogout = async () => {
+  await logout()
+  router.push('/')
+}
+
 const dashboardPath = computed(() => {
   if (authStore.role === 'candidate') {
     return '/candidate'
@@ -89,7 +100,7 @@ const jobsPath = computed(() => {
                   <RouterLink :to="dashboardPath" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900">Dashboard</RouterLink>
                   <RouterLink v-if="authStore.role === 'candidate'" to="/candidate/profile" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900">My Profile</RouterLink>
                   <div class="h-px bg-slate-100 my-1" />
-                  <button @click="authStore.logout()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                  <button @click="handleLogout" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
                     <LogOut class="w-4 h-4" />
                     Sign Out
                   </button>

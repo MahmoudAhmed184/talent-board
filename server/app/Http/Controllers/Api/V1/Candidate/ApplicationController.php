@@ -69,28 +69,20 @@ class ApplicationController extends Controller
 
         $validated = $request->validated();
 
-        $resume = null;
-        if ($validated['submission_mode'] === 'resume') {
-            $resume = $this->resumes->findForUser($user, app(\App\Models\Resume::class)->forceFill(['id' => $validated['resume_id']]));
-            abort_unless($resume, 403, 'Invalid resume.');
-        }
-
-        $contactPhone = null;
-        if ($validated['use_profile_contact']) {
-            $profile = $this->profiles->findByUser($user);
-            $contactPhone = $profile?->phone;
-        }
+        $resume = $this->resumes->findForUser($user, app(\App\Models\Resume::class)->forceFill(['id' => $validated['resume_id']]));
+        abort_unless($resume, 403, 'Invalid resume.');
 
         $application = $this->applications->create([
             'job_listing_id' => $jobListing->id,
             'candidate_id' => $user->id,
             'employer_id' => $jobListing->employer_user_id,
             'status' => ApplicationStatus::Submitted,
-            'resume_disk' => $resume?->storage_disk,
-            'resume_path' => $resume?->storage_path,
-            'resume_original_name' => $resume?->original_name,
+            'resume_id' => $resume->id,
+            'resume_disk' => $resume->storage_disk,
+            'resume_path' => $resume->storage_path,
+            'resume_original_name' => $resume->original_name,
             'contact_email' => $user->email,
-            'contact_phone' => $contactPhone,
+            'contact_phone' => $user->candidateProfile?->phone,
             'cover_letter' => $validated['cover_letter'] ?? null,
             'submitted_at' => now(),
         ]);

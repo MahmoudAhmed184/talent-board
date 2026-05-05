@@ -25,30 +25,38 @@ class AuthService
      */
     public function register(array $attributes, Request $request): User
     {
-        $role = UserRole::from($attributes['role']);
+        try {
+            $role = UserRole::from($attributes['role']);
 
-        if (! $role->canSelfRegister()) {
-            throw ValidationException::withMessages([
-                'role' => 'Admin accounts must be provisioned by platform operators.',
+            if (! $role->canSelfRegister()) {
+                throw ValidationException::withMessages([
+                    'role' => 'Admin accounts must be provisioned by platform operators.',
+                ]);
+            }
+
+            $user = $this->users->create([
+                'name' => $attributes['name'],
+                'email' => $attributes['email'],
+                'password' => $attributes['password'],
+                'role' => $role,
             ]);
-        }
 
-        $user = $this->users->create([
-            'name' => $attributes['name'],
-            'email' => $attributes['email'],
-            'password' => $attributes['password'],
-            'role' => $role,
-        ]);
+            if ($role === UserRole::Employer) {
+                $this->employerProfiles->createForUser($user, [
+                    'company_name' => $attributes['company_name'],
+                ]);
+            }
 
-        if ($role === UserRole::Employer) {
-            $this->employerProfiles->createForUser($user, [
-                'company_name' => $attributes['company_name'],
+            $this->startSession($user, $request);
+
+            return $user->refresh()->loadMissing('employerProfile');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Registration failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'email' => $attributes['email'] ?? 'unknown',
             ]);
+            throw $e;
         }
-
-        $this->startSession($user, $request);
-
-        return $user->refresh()->loadMissing('employerProfile');
     }
 
     /**

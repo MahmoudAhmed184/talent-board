@@ -24,7 +24,7 @@ const { state, clearErrors, setFieldError, setFormError, mapApiErrors, getFieldE
 
 function roleHome(role: UserRole) {
   if (role === 'candidate') {
-    return '/candidate/applications'
+    return '/'
   }
 
   if (role === 'employer') {

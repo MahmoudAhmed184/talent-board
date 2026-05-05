@@ -9,6 +9,8 @@ import JobCard from '../../features/jobs/components/JobCard.vue'
 import { useToast } from '../../composables/useToast'
 import { http } from '../../http'
 import { useCandidateProfileStore } from '../../features/candidate/stores/useCandidateProfileStore'
+import { useResumes } from '../../features/candidate/composables/useResumes'
+import { useCandidateApplicationsStore } from '../../features/candidate/stores/useCandidateApplicationsStore'
 
 const {
   jobs,
@@ -20,28 +22,44 @@ const {
 } = useJobSearch()
 
 const profileStore = useCandidateProfileStore()
+const applicationStore = useCandidateApplicationsStore()
 const { success: showSuccess, error: showError } = useToast()
 
 const selectedJob = ref<any>(null)
 const isApplyModalOpen = ref(false)
 const isSubmitting = ref(false)
 
+const { resumes, fetchResumes, uploadResume, isLoading: isResumesLoading } = useResumes()
+
 // Application Form State
-const submissionMode = ref<'resume' | 'profile'>('resume')
+const selectedResumeId = ref<number | null>(null)
 const coverLetter = ref('')
+const fileInput = ref<HTMLInputElement | null>(null)
+const isUploading = ref(false)
 
 onMounted(async () => {
   await executeSearch(1)
   await profileStore.loadProfile()
+  await applicationStore.fetchAppliedJobIds()
 })
 
 const hasDefaultResume = computed(() => !!profileStore.defaultResumeId)
 
-function openApplyModal(job: any) {
+async function openApplyModal(job: any) {
   selectedJob.value = job
-  submissionMode.value = hasDefaultResume.value ? 'resume' : 'profile'
   coverLetter.value = ''
   isApplyModalOpen.value = true
+  
+  await fetchResumes()
+  
+  // Auto-select default resume if available
+  if (profileStore.defaultResumeId && resumes.value.some(r => r.id === profileStore.defaultResumeId)) {
+    selectedResumeId.value = profileStore.defaultResumeId
+  } else if (resumes.value.length > 0) {
+    selectedResumeId.value = resumes.value[0].id
+  } else {
+    selectedResumeId.value = null
+  }
 }
 
 function closeApplyModal() {
@@ -51,25 +69,37 @@ function closeApplyModal() {
   }, 300)
 }
 
-async function submitApplication() {
-  if (!selectedJob.value) return
-  
-  if (submissionMode.value === 'resume' && !hasDefaultResume.value) {
-    showError('Please set a default resume in your profile first')
-    return
-  }
+async function handleFileUpload(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
 
+  isUploading.value = true
+  try {
+    const newResume = await uploadResume(file)
+    selectedResumeId.value = newResume.id
+    showSuccess('Resume uploaded successfully')
+  } catch (error: any) {
+    showError(error.response?.data?.message || 'Failed to upload resume')
+  } finally {
+    isUploading.value = false
+    if (fileInput.value) fileInput.value.value = ''
+  }
+}
+
+async function submitApplication() {
+  if (!selectedJob.value || !selectedResumeId.value) return
+  
   isSubmitting.value = true
   
   try {
     await http.post(`/api/v1/jobs/${selectedJob.value.id}/applications`, {
-      submission_mode: submissionMode.value,
-      resume_id: submissionMode.value === 'resume' ? profileStore.defaultResumeId : null,
-      use_profile_contact: submissionMode.value === 'profile',
+      resume_id: selectedResumeId.value,
       cover_letter: coverLetter.value || null,
     })
     
-    showSuccess(`Successfully applied to ${selectedJob.value.title}`)
+    applicationStore.markJobAsApplied(selectedJob.value.id)
+    showSuccess('Application submitted successfully')
     closeApplyModal()
   } catch (error: any) {
     showError(error.response?.data?.message || 'Failed to submit application')
@@ -145,43 +175,62 @@ async function submitApplication() {
         </div>
         
         <div class="space-y-4">
-          <label class="block text-sm font-medium text-slate-900">Submission Method</label>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <!-- Use Resume Option -->
-            <label
-              class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none transition-all"
-              :class="submissionMode === 'resume' ? 'border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50/10' : 'border-slate-200 hover:border-slate-300'"
-            >
-              <input type="radio" name="submission_mode" value="resume" v-model="submissionMode" class="sr-only">
-              <span class="flex flex-1">
-                <span class="flex flex-col">
-                  <span class="block text-sm font-medium text-slate-900">Use Default Resume</span>
-                  <span class="mt-1 flex items-center text-xs text-slate-500">
-                    {{ hasDefaultResume ? profileStore.defaultResume?.original_name : 'No default resume set' }}
-                  </span>
-                </span>
-              </span>
-              <CheckCircle v-if="submissionMode === 'resume'" class="h-5 w-5 text-emerald-600 shrink-0" />
-            </label>
-            
-            <!-- Use Profile Contact Option -->
-            <label
-              class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none transition-all"
-              :class="submissionMode === 'profile' ? 'border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50/10' : 'border-slate-200 hover:border-slate-300'"
-            >
-              <input type="radio" name="submission_mode" value="profile" v-model="submissionMode" class="sr-only">
-              <span class="flex flex-1">
-                <span class="flex flex-col">
-                  <span class="block text-sm font-medium text-slate-900">Use Profile Details</span>
-                  <span class="mt-1 flex items-center text-xs text-slate-500">Submit summary & skills</span>
-                </span>
-              </span>
-              <CheckCircle v-if="submissionMode === 'profile'" class="h-5 w-5 text-emerald-600 shrink-0" />
-            </label>
+          <div class="flex items-center justify-between">
+            <label class="block text-sm font-medium text-slate-900">Select Resume (CV)</label>
+            <span v-if="resumes.length >= 3" class="text-xs text-slate-500">Max 3 resumes reached</span>
           </div>
           
-          <div v-if="submissionMode === 'resume' && !hasDefaultResume" class="text-sm text-red-600 mt-2">
-            You must set a default resume in your Profile to use this option.
+          <div v-if="isResumesLoading && resumes.length === 0" class="space-y-3">
+            <div v-for="i in 2" :key="i" class="h-16 animate-pulse rounded-lg bg-slate-100"></div>
+          </div>
+
+          <div v-else-if="resumes.length === 0" class="rounded-lg border border-dashed border-slate-300 p-6 text-center">
+            <FileText class="mx-auto h-8 w-8 text-slate-400 mb-2" />
+            <p class="text-sm text-slate-600">You don’t have any CVs yet</p>
+          </div>
+
+          <div v-else class="grid gap-3">
+            <label
+              v-for="resume in resumes"
+              :key="resume.id"
+              class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none transition-all"
+              :class="selectedResumeId === resume.id ? 'border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50/10' : 'border-slate-200 hover:border-slate-300'"
+            >
+              <input type="radio" :value="resume.id" v-model="selectedResumeId" class="sr-only">
+              <span class="flex flex-1">
+                <span class="flex flex-col">
+                  <span class="block text-sm font-medium text-slate-900">{{ resume.original_name }}</span>
+                  <span class="mt-1 text-xs text-slate-500">Uploaded on {{ new Date(resume.created_at).toLocaleDateString() }}</span>
+                </span>
+              </span>
+              <CheckCircle v-if="selectedResumeId === resume.id" class="h-5 w-5 text-emerald-600 shrink-0" />
+            </label>
+          </div>
+
+          <!-- Upload New Resume -->
+          <div v-if="resumes.length < 3" class="mt-4">
+            <input
+              type="file"
+              ref="fileInput"
+              class="hidden"
+              accept=".pdf,.doc,.docx"
+              @change="handleFileUpload"
+            >
+            <button
+              type="button"
+              @click="fileInput?.click()"
+              class="w-full flex items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 p-4 text-sm font-medium text-slate-600 hover:border-emerald-500 hover:text-emerald-600 transition-all"
+              :disabled="isUploading"
+            >
+              <template v-if="isUploading">
+                <div class="h-4 w-4 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent"></div>
+                Uploading...
+              </template>
+              <template v-else>
+                <FileText class="h-4 w-4" />
+                Upload New CV
+              </template>
+            </button>
           </div>
         </div>
         
@@ -207,7 +256,7 @@ async function submitApplication() {
           <button
             @click="submitApplication"
             class="px-5 py-2 rounded-lg text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50"
-            :disabled="isSubmitting || (submissionMode === 'resume' && !hasDefaultResume)"
+            :disabled="isSubmitting || !selectedResumeId"
           >
             {{ isSubmitting ? 'Submitting...' : 'Submit Application' }}
           </button>
