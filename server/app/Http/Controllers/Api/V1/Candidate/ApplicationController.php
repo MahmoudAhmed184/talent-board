@@ -48,7 +48,7 @@ class ApplicationController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
-        
+
         return response()->json([
             'data' => $this->applications->getAppliedJobIds($user)
         ]);
@@ -68,7 +68,7 @@ class ApplicationController extends Controller
         }
 
         $validated = $request->validated();
-        
+
         $resume = null;
         if ($validated['submission_mode'] === 'resume') {
             $resume = $this->resumes->findForUser($user, app(\App\Models\Resume::class)->forceFill(['id' => $validated['resume_id']]));
