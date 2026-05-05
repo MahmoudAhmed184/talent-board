@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import ApplicationStatusBadge from '../../components/ApplicationStatusBadge.vue'
 import { useEcho, type ApplicationStatusChangedPayload } from '../../composables/useEcho'
 import { useAuthStore } from '../../features/auth/stores/useAuthStore'

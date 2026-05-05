@@ -1,5 +1,4 @@
-import type { JsonApiPaginatedResponse } from '../../../types/pagination'
-import type { JobListingDetail } from '../../jobs/types'
+import type { PublicJobDetail } from '../../composables/usePublicJobs'
 
 export interface Resume {
   id: number
@@ -23,7 +22,7 @@ export interface CandidateProfile {
 export interface CandidateApplication {
   id: number
   job_listing_id: number
-  job_listing?: Pick<JobListingDetail, 'id' | 'title' | 'employer'>
+  job_listing?: Pick<PublicJobDetail, 'id' | 'title' | 'employer'>
   status: string
   submission_mode: 'resume' | 'contact'
   cover_letter: string | null
