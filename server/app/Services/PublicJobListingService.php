@@ -25,7 +25,7 @@ class PublicJobListingService
         return Cache::remember(
             $cacheKey,
             now()->addMinutes(60),
-            fn (): LengthAwarePaginator => $this->jobListings->paginatePublic($preparedFilters, $perPage)
+            fn(): LengthAwarePaginator => $this->jobListings->paginatePublic($preparedFilters, $perPage)
         );
     }
 
@@ -38,7 +38,7 @@ class PublicJobListingService
         return Cache::remember(
             $cacheKey,
             now()->addMinutes(60),
-            fn (): JobListing => $this->jobListings->loadEmployer($jobListing)
+            fn(): JobListing => $this->jobListings->loadEmployer($jobListing)
         );
     }
 }
