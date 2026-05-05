@@ -210,9 +210,16 @@ async function doSubmitApplication() {
             </p>
           </div>
 
-          <div class="pt-2">
-            <p class="text-xs text-gray-500 mb-2">Or upload a new one:</p>
+          <div class="pt-2" v-if="resumes.length < 3">
+            <p class="text-xs text-gray-500 mb-2">Or upload a new one (Max 3):</p>
             <ResumeUpload @uploaded="onResumeUploaded" @error="showError" />
+          </div>
+          <div v-else class="pt-2">
+            <p class="text-xs text-amber-600 font-medium">
+              You have reached the limit of 3 resumes. Delete one from your 
+              <RouterLink to="/candidate/profile" class="underline">profile</RouterLink> 
+              if you want to upload a new one.
+            </p>
           </div>
 
           <p class="text-xs text-gray-400">

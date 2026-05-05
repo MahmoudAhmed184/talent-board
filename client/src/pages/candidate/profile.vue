@@ -165,9 +165,15 @@ function onResumeUploaded(resume: Resume) {
           <h2 class="text-xl font-semibold mb-6 text-white">Resumes</h2>
           
           <ResumeUpload
+            v-if="resumes.length < 3"
             @uploaded="onResumeUploaded"
             @error="showError"
           />
+          <div v-else class="p-4 bg-amber-900/20 border border-amber-700/50 rounded-md">
+            <p class="text-sm text-amber-400">
+              You have reached the limit of 3 resumes. Delete an existing one to upload a new version.
+            </p>
+          </div>
           
           <div class="mt-6 space-y-4">
             <p v-if="resumes.length === 0" class="text-gray-400 text-sm text-center py-4">

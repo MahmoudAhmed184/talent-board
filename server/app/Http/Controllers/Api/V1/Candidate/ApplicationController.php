@@ -66,7 +66,6 @@ class ApplicationController extends Controller
             'candidate_id' => $user->id,
             'employer_id' => $jobListing->employer_user_id,
             'status' => ApplicationStatus::Submitted,
-            'resume_id' => $resume?->id,
             'resume_disk' => $resume?->storage_disk,
             'resume_path' => $resume?->storage_path,
             'resume_original_name' => $resume?->original_name,

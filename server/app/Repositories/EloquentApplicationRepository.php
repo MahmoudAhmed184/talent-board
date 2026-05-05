@@ -33,7 +33,7 @@ class EloquentApplicationRepository implements ApplicationRepositoryInterface
     public function paginateForCandidate(User $candidate, int $perPage, ?ApplicationStatus $status): LengthAwarePaginator
     {
         return Application::query()
-            ->with(['jobListing:id,title,employer_user_id', 'jobListing.employer:id', 'jobListing.employer.employerProfile:id,user_id,company_name', 'resume:id,original_name'])
+            ->with(['jobListing:id,title,employer_user_id', 'jobListing.employer:id', 'jobListing.employer.employerProfile:id,user_id,company_name'])
             ->where('candidate_id', $candidate->id)
             ->when($status, fn ($query) => $query->where('status', $status->value))
             ->latest('submitted_at')
@@ -44,7 +44,7 @@ class EloquentApplicationRepository implements ApplicationRepositoryInterface
     public function findForCandidate(User $candidate, Application $application): ?Application
     {
         return Application::query()
-            ->with(['jobListing:id,title,employer_user_id', 'jobListing.employer:id', 'jobListing.employer.employerProfile:id,user_id,company_name', 'resume:id,original_name'])
+            ->with(['jobListing:id,title,employer_user_id', 'jobListing.employer:id', 'jobListing.employer.employerProfile:id,user_id,company_name'])
             ->whereKey($application->getKey())
             ->where('candidate_id', $candidate->id)
             ->first();
@@ -65,7 +65,7 @@ class EloquentApplicationRepository implements ApplicationRepositoryInterface
     {
         $application = Application::create($attributes);
 
-        return $application->refresh()->loadMissing(['jobListing:id,title,employer_user_id', 'jobListing.employer:id', 'jobListing.employer.employerProfile:id,user_id,company_name', 'resume:id,original_name']);
+        return $application->refresh()->loadMissing(['jobListing:id,title,employer_user_id', 'jobListing.employer:id', 'jobListing.employer.employerProfile:id,user_id,company_name']);
     }
 
     /**
@@ -85,6 +85,6 @@ class EloquentApplicationRepository implements ApplicationRepositoryInterface
             'decided_at' => now(),
         ]);
 
-        return $application->refresh()->loadMissing(['jobListing:id,title,employer_user_id', 'jobListing.employer:id', 'jobListing.employer.employerProfile:id,user_id,company_name', 'resume:id,original_name']);
+        return $application->refresh()->loadMissing(['jobListing:id,title,employer_user_id', 'jobListing.employer:id', 'jobListing.employer.employerProfile:id,user_id,company_name']);
     }
 }

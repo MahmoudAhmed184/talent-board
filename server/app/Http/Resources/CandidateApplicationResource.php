@@ -28,14 +28,13 @@ class CandidateApplicationResource extends JsonResource
                 ],
             ]),
             'status' => $this->status->value,
-            'submission_mode' => $this->resume_id ? 'resume' : 'contact',
+            'submission_mode' => $this->resume_path ? 'resume' : 'contact',
             'cover_letter' => $this->cover_letter,
             'contact_email' => $this->contact_email,
             'contact_phone' => $this->contact_phone,
-            'resume' => $this->whenLoaded('resume', fn (): array => [
-                'id' => $this->resume?->id,
-                'original_name' => $this->resume?->original_name,
-            ]),
+            'resume' => [
+                'original_name' => $this->resume_original_name,
+            ],
             'submitted_at' => $this->submitted_at?->toIso8601String(),
             'decision' => [
                 'note' => $this->decision_note,

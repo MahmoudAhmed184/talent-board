@@ -9,8 +9,8 @@ use Illuminate\Support\Str;
 
 class FileStorageService
 {
-    private const RESUME_DISK = 's3';
-    private const LOGO_DISK = 's3';
+    private const RESUME_DISK = 'public';
+    private const LOGO_DISK = 'public';
 
     /**
      * @return array{storage_disk: string, storage_path: string, original_name: string, mime_type: string, size: int, checksum: string}
