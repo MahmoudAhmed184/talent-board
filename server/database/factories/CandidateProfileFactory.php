@@ -2,67 +2,44 @@
 
 namespace Database\Factories;
 
+use App\Models\CandidateProfile;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
-class CandidateProfileFactory
+/**
+ * @extends Factory<CandidateProfile>
+ */
+class CandidateProfileFactory extends Factory
 {
-    /**
-     * @param  array<string, mixed>  $state
-     */
-    public function __construct(
-        private array $state = [],
-    ) {}
-
-    public static function new(): self
-    {
-        return new self;
-    }
-
-    /**
-     * @param  array<string, mixed>  $overrides
-     * @return array<string, mixed>
-     */
-    public function make(array $overrides = []): array
-    {
-        return array_replace($this->definition(), $this->state, $overrides);
-    }
-
-    /**
-     * @param  array<string, mixed>  $state
-     */
-    public function state(array $state): self
-    {
-        $this->state = array_replace($this->state, $state);
-
-        return $this;
-    }
-
-    public function forUser(User|int $user): self
-    {
-        return $this->state([
-            'user_id' => $user instanceof User ? $user->getKey() : $user,
-        ]);
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            'user_id' => null,
+            'user_id' => User::factory()->candidate(),
             'summary' => fake()->paragraph(),
-            'location_text' => fake()->city().', '.fake()->country(),
+            'location_text' => fake()->city() . ', ' . fake()->country(),
             'phone' => fake()->phoneNumber(),
             'skills' => array_values(fake()->randomElements([
                 'PHP',
                 'Laravel',
                 'Vue',
                 'TypeScript',
+                'JavaScript',
                 'SQL',
                 'Testing',
-            ], 3)),
+                'Docker',
+                'Git',
+                'REST APIs',
+                'CSS',
+                'HTML',
+            ], fake()->numberBetween(2, 5))),
             'default_resume_id' => null,
         ];
+    }
+
+    public function forUser(User|int $user): static
+    {
+        return $this->state(fn (): array => [
+            'user_id' => $user instanceof User ? $user->getKey() : $user,
+        ]);
     }
 }
