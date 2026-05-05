@@ -17,7 +17,7 @@ const emit = defineEmits<{
   close: []
 }>()
 
-const open = defineModel<boolean>('open', {
+const isOpen = defineModel<boolean>('isOpen', {
   default: false,
 })
 const panelRef = useTemplateRef<HTMLElement>('panel')
@@ -36,8 +36,8 @@ const focusableSelector = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(',')
 
-watch(open, async (isOpen) => {
-  if (isOpen) {
+watch(isOpen, async (value) => {
+  if (value) {
     previouslyFocusedElement = document.activeElement instanceof HTMLElement
       ? document.activeElement
       : null
@@ -70,7 +70,7 @@ function focusInitialElement() {
 }
 
 function requestClose() {
-  open.value = false
+  isOpen.value = false
   emit('close')
 }
 
@@ -122,7 +122,7 @@ function trapFocus(event: KeyboardEvent) {
 <template>
   <Teleport to="body">
     <div
-      v-if="open"
+      v-if="isOpen"
       class="fixed inset-0 z-50 grid place-items-center bg-slate-950/50 p-4"
       @click.self="handleBackdropClick"
       @keydown="handleKeydown"

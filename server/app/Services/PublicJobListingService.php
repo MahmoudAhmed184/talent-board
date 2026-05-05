@@ -20,25 +20,14 @@ class PublicJobListingService
     public function search(array $filters, int $perPage): LengthAwarePaginator
     {
         $preparedFilters = $this->searchService->prepareJobFilters($filters);
-        $cacheKey = 'public_jobs_search_' . md5(json_encode($preparedFilters) . "_perPage:{$perPage}");
 
-        return Cache::remember(
-            $cacheKey,
-            now()->addMinutes(60),
-            fn(): LengthAwarePaginator => $this->jobListings->paginatePublic($preparedFilters, $perPage)
-        );
+        return $this->jobListings->paginatePublic($preparedFilters, $perPage);
     }
 
     public function show(JobListing $jobListing): JobListing
     {
         abort_unless($this->jobListings->isPublic($jobListing), 404);
 
-        $cacheKey = "public_job_{$jobListing->id}";
-
-        return Cache::remember(
-            $cacheKey,
-            now()->addMinutes(60),
-            fn(): JobListing => $this->jobListings->loadEmployer($jobListing)
-        );
+        return $this->jobListings->loadEmployer($jobListing);
     }
 }
