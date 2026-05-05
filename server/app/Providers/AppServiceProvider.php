@@ -40,6 +40,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         config(['logging.default' => 'stderr']);
+        config(['broadcasting.default' => 'log']);
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
         Event::listen(ApplicationStatusChanged::class, BroadcastApplicationStatusChanged::class);
 

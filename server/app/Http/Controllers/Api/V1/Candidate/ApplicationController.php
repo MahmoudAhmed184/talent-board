@@ -72,7 +72,6 @@ class ApplicationController extends Controller
             'contact_email' => $user->email,
             'contact_phone' => $contactPhone,
             'cover_letter' => $validated['cover_letter'] ?? null,
-            'submission_mode' => $validated['submission_mode'],
             'submitted_at' => now(),
         ]);
 
