@@ -6,8 +6,7 @@ import { useCandidateApplicationsStore } from '../../features/candidate/stores/u
 import Pagination from '../../components/Pagination.vue'
 import { useToast } from '../../composables/useToast'
 import AppModal from '../../components/AppModal.vue'
-import AppButton from '../../components/AppButton.vue'
-import { Search, Filter, Briefcase, Calendar, FileText, XCircle, RotateCcw } from 'lucide-vue-next'
+import { Filter, Briefcase, Calendar, FileText, XCircle, RotateCcw } from 'lucide-vue-next'
 import { format } from 'date-fns'
 
 const authStore = useAuthStore()
