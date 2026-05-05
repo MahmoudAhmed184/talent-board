@@ -11,11 +11,13 @@ import { useCandidateProfileStore } from '../../features/candidate/stores/useCan
 import { useRouter } from 'vue-router'
 import { useToast } from '../../composables/useToast'
 import ResumeUpload from '../../features/candidate/components/ResumeUpload.vue'
+import { useCandidateApplicationsStore } from '../../features/candidate/stores/useCandidateApplicationsStore'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const profileStore = useCandidateProfileStore()
+const applicationStore = useCandidateApplicationsStore()
 const { submitApplication, isSubmitting } = useApplicationSubmit()
 const { success: showSuccess, error: showError } = useToast()
 
@@ -37,6 +39,11 @@ const jobId = computed(() => {
   }
 
   return rawId ? String(rawId) : ''
+})
+
+const hasApplied = computed(() => {
+  if (authStore.user?.role !== 'candidate') return false
+  return applicationStore.applications.some(app => String(app.job_listing_id) === jobId.value)
 })
 
 async function fetchResumes() {
@@ -78,7 +85,8 @@ onMounted(async () => {
   if (authStore.user?.role === 'candidate') {
     await Promise.all([
       profileStore.loadProfile(),
-      fetchResumes()
+      fetchResumes(),
+      applicationStore.loadPage(1)
     ])
   }
 })
@@ -170,7 +178,12 @@ async function doSubmitApplication() {
       </RouterLink>
     </div>
 
-    <JobDetail v-else :job="selectedJob" @apply="handleApplyClick" />
+    <JobDetail
+      v-else
+      :job="selectedJob"
+      :has-applied="hasApplied"
+      @apply="handleApplyClick"
+    />
 
     <AppModal
       :is-open="isModalOpen"

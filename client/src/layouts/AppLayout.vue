@@ -59,6 +59,14 @@ const dashboardPath = computed(() => {
           >
             Dashboard
           </RouterLink>
+          <RouterLink
+            v-if="authStore.role === 'candidate'"
+            to="/candidate/profile"
+            class="rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-950"
+            active-class="bg-emerald-50 text-emerald-800"
+          >
+            Profile
+          </RouterLink>
           <span
             v-else-if="authStore.isSessionLoading"
             class="rounded-md px-3 py-2 text-sm font-semibold text-slate-500"

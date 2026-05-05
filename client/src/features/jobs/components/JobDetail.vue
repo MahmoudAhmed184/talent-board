@@ -2,8 +2,9 @@
 import { type PublicJobDetail } from '../../../composables/usePublicJobs'
 import { sentenceCase, formatSalaryRange } from '../utils/formatters'
 
-const { job } = defineProps<{
+const { job, hasApplied = false } = defineProps<{
   job: PublicJobDetail
+  hasApplied?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -87,10 +88,16 @@ const emit = defineEmits<{
           </p>
           <button
             type="button"
-            class="mt-6 w-full rounded-md bg-emerald-700 py-3 text-sm font-semibold text-white hover:bg-emerald-800"
+            class="mt-6 w-full rounded-md py-3 text-sm font-semibold transition-colors"
+            :class="[
+              hasApplied 
+                ? 'bg-slate-200 text-slate-500 cursor-not-allowed' 
+                : 'bg-emerald-700 text-white hover:bg-emerald-800'
+            ]"
+            :disabled="hasApplied"
             @click="emit('apply')"
           >
-            Apply Now
+            {{ hasApplied ? 'Already Applied' : 'Apply Now' }}
           </button>
         </div>
       </aside>
