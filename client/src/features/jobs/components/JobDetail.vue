@@ -5,6 +5,10 @@ import { sentenceCase, formatSalaryRange } from '../utils/formatters'
 const { job } = defineProps<{
   job: PublicJobDetail
 }>()
+
+const emit = defineEmits<{
+  (e: 'apply'): void
+}>()
 </script>
 
 <template>
@@ -84,6 +88,7 @@ const { job } = defineProps<{
           <button
             type="button"
             class="mt-6 w-full rounded-md bg-emerald-700 py-3 text-sm font-semibold text-white hover:bg-emerald-800"
+            @click="emit('apply')"
           >
             Apply Now
           </button>

@@ -72,6 +72,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/candidate/profile': RouteRecordInfo<
+      '/candidate/profile',
+      '/candidate/profile',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/employer/': RouteRecordInfo<
       '/employer/',
       '/employer',
@@ -175,6 +182,7 @@ declare module 'vue-router/auto-routes' {
       routes:
         | '/candidate/'
         | '/candidate/applications'
+        | '/candidate/profile'
       views:
         | 'default'
     }
@@ -187,6 +195,12 @@ declare module 'vue-router/auto-routes' {
     'src/pages/candidate/applications.vue': {
       routes:
         | '/candidate/applications'
+      views:
+        | never
+    }
+    'src/pages/candidate/profile.vue': {
+      routes:
+        | '/candidate/profile'
       views:
         | never
     }
