@@ -9,6 +9,8 @@ import { Save, User as UserIcon, MapPin, Phone, FileText, CheckCircle, Trash2, S
 const store = useCandidateProfileStore()
 const { success: showSuccess, error: showError } = useToast()
 
+const name = ref('')
+const email = ref('')
 const summary = ref('')
 const locationText = ref('')
 const phone = ref('')
@@ -18,6 +20,8 @@ const resumes = ref<Resume[]>([])
 onMounted(async () => {
   await store.loadProfile()
   if (store.profile) {
+    name.value = store.profile.name || ''
+    email.value = store.profile.email || ''
     summary.value = store.profile.summary || ''
     locationText.value = store.profile.location_text || ''
     phone.value = store.profile.phone || ''
@@ -112,6 +116,38 @@ function onResumeUploaded(resume: Resume) {
           </div>
           
           <div class="p-6 space-y-6 flex-1">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <!-- Name -->
+              <div>
+                <label class="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1.5">
+                  Name
+                </label>
+                <input
+                  v-model="name"
+                  type="text"
+                  disabled
+                  class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-500 cursor-not-allowed shadow-sm"
+                  placeholder="Your full name"
+                >
+                <p class="mt-1 text-xs text-slate-400">Manage your name in account settings.</p>
+              </div>
+              
+              <!-- Email -->
+              <div>
+                <label class="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1.5">
+                  Email
+                </label>
+                <input
+                  v-model="email"
+                  type="email"
+                  disabled
+                  class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-500 cursor-not-allowed shadow-sm"
+                  placeholder="your@email.com"
+                >
+                <p class="mt-1 text-xs text-slate-400">Manage your email in account settings.</p>
+              </div>
+            </div>
+
             <!-- Summary -->
             <div>
               <label class="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1.5">

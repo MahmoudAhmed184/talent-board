@@ -16,6 +16,8 @@ class CandidateProfileResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'name' => $this->user?->name,
+            'email' => $this->user?->email,
             'summary' => $this->summary,
             'location_text' => $this->location_text,
             'phone' => $this->phone,

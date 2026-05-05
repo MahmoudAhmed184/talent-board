@@ -10,6 +10,8 @@ export interface Resume {
 
 export interface CandidateProfile {
   id: number
+  name?: string
+  email?: string
   summary: string | null
   location_text: string | null
   phone: string | null

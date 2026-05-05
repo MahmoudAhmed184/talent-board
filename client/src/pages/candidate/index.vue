@@ -20,7 +20,7 @@ const stats = computed(() => {
   
   // Since we might only have page 1, true counts would need API support.
   // For the UI, we'll calculate from the current items, or if we had real stats from API.
-  const pending = applications.value.filter(a => a.status === 'pending').length
+  const pending = applications.value.filter(a => ['submitted', 'under_review'].includes(a.status)).length
   const accepted = applications.value.filter(a => a.status === 'accepted').length
   const rejected = applications.value.filter(a => a.status === 'rejected').length
 
@@ -36,6 +36,8 @@ function getStatusColor(status: string) {
   switch (status) {
     case 'accepted': return 'bg-emerald-100 text-emerald-800 border-emerald-200'
     case 'rejected': return 'bg-red-100 text-red-800 border-red-200'
+    case 'submitted':
+    case 'under_review':
     case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
     default: return 'bg-slate-100 text-slate-800 border-slate-200'
   }
@@ -84,8 +86,8 @@ function getStatusColor(status: string) {
       <div v-else class="divide-y divide-slate-100">
         <div v-for="app in recentApplications" :key="app.id" class="p-6 hover:bg-slate-50 transition-colors flex items-center justify-between">
           <div class="flex flex-col gap-1">
-            <h3 class="text-sm font-semibold text-slate-900">{{ app.job?.title || 'Unknown Job' }}</h3>
-            <p class="text-sm text-slate-500">{{ app.job?.company?.name || 'Unknown Company' }} &bull; Applied {{ format(new Date(app.created_at), 'MMM d, yyyy') }}</p>
+            <h3 class="text-sm font-semibold text-slate-900">{{ app.job_listing?.title || 'Unknown Job' }}</h3>
+            <p class="text-sm text-slate-500">{{ app.job_listing?.employer?.company_name || 'Unknown Company' }} &bull; Applied {{ format(new Date(app.submitted_at), 'MMM d, yyyy') }}</p>
           </div>
           <div>
             <span :class="['inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold capitalize transition-colors focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2', getStatusColor(app.status)]">
