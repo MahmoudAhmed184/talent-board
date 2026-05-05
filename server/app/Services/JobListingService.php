@@ -26,6 +26,7 @@ class JobListingService
         return $this->jobListings->paginateForEmployer($employer, $status, $perPage);
     }
 
+
     public function showForEmployer(JobListing $jobListing): JobListing
     {
         return $this->jobListings->loadEmployer($jobListing);
@@ -42,6 +43,7 @@ class JobListingService
             'published_at' => null,
         ]);
     }
+
 
     public function delete(JobListing $jobListing): void
     {

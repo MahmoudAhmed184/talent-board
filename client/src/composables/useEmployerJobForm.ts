@@ -50,6 +50,13 @@ interface UseEmployerJobFormOptions {
   onSubmit?: (payload: EmployerJobPayload) => Promise<void>;
 }
 
+const safeTrim = (value: any): string => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  return String(value).trim();
+};
+
 const defaultValues = (): EmployerJobFormData => ({
   title: '',
   description: '',
@@ -64,12 +71,17 @@ const defaultValues = (): EmployerJobFormData => ({
   expiresAt: '',
 });
 
-const toNullableNumber = (value: string): number | null => {
-  if (value.trim() === '') {
+const toNullableNumber = (value: any): number | null => {
+  if (value === null || value === undefined) {
     return null;
   }
 
-  const parsed = Number(value);
+  const strValue = String(value).trim();
+  if (strValue === '') {
+    return null;
+  }
+
+  const parsed = Number(strValue);
   return Number.isFinite(parsed) ? parsed : null;
 };
 
@@ -85,22 +97,22 @@ export function useEmployerJobForm(options: UseEmployerJobFormOptions = {}) {
   const validate = (): boolean => {
     clearErrors();
 
-    if (!values.title.trim()) {
+    if (!safeTrim(values.title)) {
       setFieldError('title', 'Job title is required.');
     }
-    if (!values.description.trim()) {
+    if (!safeTrim(values.description)) {
       setFieldError('description', 'Description is required.');
     }
-    if (!values.location.trim()) {
+    if (!safeTrim(values.location)) {
       setFieldError('location', 'Location is required.');
     }
-    if (!values.category.trim()) {
+    if (!safeTrim(values.category)) {
       setFieldError('category', 'Category is required.');
     }
-    if (!values.workType.trim()) {
+    if (!safeTrim(values.workType)) {
       setFieldError('workType', 'Work type is required.');
     }
-    if (!values.experienceLevel.trim()) {
+    if (!safeTrim(values.experienceLevel)) {
       setFieldError('experienceLevel', 'Experience level is required.');
     }
 
@@ -114,14 +126,14 @@ export function useEmployerJobForm(options: UseEmployerJobFormOptions = {}) {
   };
 
   const normalizedPayload = (): EmployerJobPayload => ({
-    title: values.title.trim(),
-    description: values.description.trim(),
-    responsibilities: values.responsibilities.trim() || null,
-    qualifications: values.qualifications.trim() || null,
-    location: values.location.trim(),
-    category: values.category.trim(),
-    work_type: values.workType.trim(),
-    experience_level: values.experienceLevel.trim(),
+    title: safeTrim(values.title),
+    description: safeTrim(values.description),
+    responsibilities: safeTrim(values.responsibilities) || null,
+    qualifications: safeTrim(values.qualifications) || null,
+    location: safeTrim(values.location),
+    category: safeTrim(values.category),
+    work_type: safeTrim(values.workType),
+    experience_level: safeTrim(values.experienceLevel),
     salary_min: toNullableNumber(values.salaryMin),
     salary_max: toNullableNumber(values.salaryMax),
     expires_at: values.expiresAt || null,

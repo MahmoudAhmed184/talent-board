@@ -11,6 +11,7 @@
 <script setup lang="ts">
 const navItems = [
   { label: 'Overview', to: '/admin' },
+  { label: 'Job listings', to: '/admin/jobs' },
 ] as const
 </script>
 

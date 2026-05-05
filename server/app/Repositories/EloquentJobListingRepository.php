@@ -3,10 +3,13 @@
 namespace App\Repositories;
 
 use App\Models\JobListing;
+use App\Models\Category;
+use App\Models\Location;
 use App\Models\User;
 use App\Repositories\Contracts\JobListingRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 
 class EloquentJobListingRepository implements JobListingRepositoryInterface
 {
@@ -15,6 +18,8 @@ class EloquentJobListingRepository implements JobListingRepositoryInterface
      */
     public function createForEmployer(User $employer, array $attributes): JobListing
     {
+        $this->prepareAttributes($attributes);
+
         return JobListing::query()->create([
             ...$attributes,
             'employer_user_id' => $employer->id,
@@ -27,17 +32,19 @@ class EloquentJobListingRepository implements JobListingRepositoryInterface
     {
         return JobListing::query()
             ->where('employer_user_id', $employer->id)
-            ->when($status, fn (Builder $query): Builder => $query->where('approval_status', $status))
+            ->when($status, fn(Builder $query): Builder => $query->where('approval_status', $status))
             ->latest('updated_at')
             ->latest('id')
             ->paginate($perPage);
     }
+
 
     /**
      * @param  array<string, mixed>  $attributes
      */
     public function update(JobListing $jobListing, array $attributes): JobListing
     {
+        $this->prepareAttributes($attributes);
         $jobListing->update($attributes);
 
         return $jobListing->refresh();
@@ -61,14 +68,14 @@ class EloquentJobListingRepository implements JobListingRepositoryInterface
                         ->orWhere('description', 'like', "%{$keyword}%");
                 });
             })
-            ->when($filters['location_id'] ?? null, fn (Builder $query, int $value): Builder => $query->where('location_id', $value))
-            ->when($filters['category_id'] ?? null, fn (Builder $query, int $value): Builder => $query->where('category_id', $value))
-            ->when($filters['work_type'] ?? null, fn (Builder $query, string $value): Builder => $query->where('work_type', $value))
-            ->when($filters['experience_level'] ?? null, fn (Builder $query, string $value): Builder => $query->where('experience_level', $value))
-            ->when($filters['salary_min'] ?? null, fn (Builder $query, int $value): Builder => $query->where('salary_max', '>=', $value))
-            ->when($filters['salary_max'] ?? null, fn (Builder $query, int $value): Builder => $query->where('salary_min', '<=', $value))
-            ->when($filters['posted_after'] ?? null, fn (Builder $query, string $value): Builder => $query->where('published_at', '>=', $value))
-            ->when($filters['posted_before'] ?? null, fn (Builder $query, string $value): Builder => $query->where('published_at', '<=', $value))
+            ->when($filters['location_id'] ?? null, fn(Builder $query, int $value): Builder => $query->where('location_id', $value))
+            ->when($filters['category_id'] ?? null, fn(Builder $query, int $value): Builder => $query->where('category_id', $value))
+            ->when($filters['work_type'] ?? null, fn(Builder $query, string $value): Builder => $query->where('work_type', $value))
+            ->when($filters['experience_level'] ?? null, fn(Builder $query, string $value): Builder => $query->where('experience_level', $value))
+            ->when($filters['salary_min'] ?? null, fn(Builder $query, int $value): Builder => $query->where('salary_max', '>=', $value))
+            ->when($filters['salary_max'] ?? null, fn(Builder $query, int $value): Builder => $query->where('salary_min', '<=', $value))
+            ->when($filters['posted_after'] ?? null, fn(Builder $query, string $value): Builder => $query->where('published_at', '>=', $value))
+            ->when($filters['posted_before'] ?? null, fn(Builder $query, string $value): Builder => $query->where('published_at', '<=', $value))
             ->latest('published_at')
             ->latest('id')
             ->paginate($perPage);
@@ -83,7 +90,33 @@ class EloquentJobListingRepository implements JobListingRepositoryInterface
 
     public function loadEmployer(JobListing $jobListing): JobListing
     {
-        return $jobListing->loadMissing(['employer.employerProfile']);
+        return $jobListing->loadMissing(['employer.employerProfile', 'category', 'location']);
+    }
+
+    private function prepareAttributes(array &$attributes): void
+    {
+        if (isset($attributes['category'])) {
+            $category = Category::query()->firstOrCreate(
+                ['name' => $attributes['category']],
+                ['slug' => Str::slug($attributes['category'])]
+            );
+            $attributes['category_id'] = $category->id;
+            unset($attributes['category']);
+        }
+
+        if (isset($attributes['location'])) {
+            $location = Location::query()->firstOrCreate(
+                ['name' => $attributes['location']],
+                ['slug' => Str::slug($attributes['location'])]
+            );
+            $attributes['location_id'] = $location->id;
+            unset($attributes['location']);
+        }
+
+        if (isset($attributes['expires_at'])) {
+            $attributes['application_deadline'] = $attributes['expires_at'];
+            unset($attributes['expires_at']);
+        }
     }
 
     private function publicQuery(): Builder
