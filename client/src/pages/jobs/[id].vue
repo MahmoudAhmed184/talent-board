@@ -10,6 +10,7 @@ import { useApplicationSubmit } from '../../features/candidate/composables/useAp
 import { useCandidateProfileStore } from '../../features/candidate/stores/useCandidateProfileStore'
 import { useRouter } from 'vue-router'
 import { useToast } from '../../composables/useToast'
+import ResumeUpload from '../../features/candidate/components/ResumeUpload.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -25,6 +26,7 @@ const submissionMode = ref<'resume' | 'contact'>('resume')
 const selectedResumeId = ref<number | null>(null)
 const useProfileContact = ref(true)
 const coverLetter = ref('')
+const resumes = ref<any[]>([])
 
 const jobId = computed(() => {
   const params = route.params as Record<string, string | string[] | undefined>
@@ -36,6 +38,26 @@ const jobId = computed(() => {
 
   return rawId ? String(rawId) : ''
 })
+
+async function fetchResumes() {
+  if (authStore.user?.role !== 'candidate') return
+  try {
+    const { fetchResumes } = await import('../../features/candidate/composables/useCandidateProfile').then(m => m.useCandidateProfile())
+    const response = await fetchResumes()
+    resumes.value = response.data
+    
+    // Set selected if not set and we have a default or first
+    if (!selectedResumeId.value) {
+      if (profileStore.defaultResumeId) {
+        selectedResumeId.value = profileStore.defaultResumeId
+      } else if (resumes.value.length > 0) {
+        selectedResumeId.value = resumes.value[0].id
+      }
+    }
+  } catch (e) {
+    console.error('Failed to load resumes')
+  }
+}
 
 async function load(): Promise<void> {
   if (!jobId.value) {
@@ -54,10 +76,10 @@ watch(jobId, (newId, oldId) => {
 onMounted(async () => {
   await load()
   if (authStore.user?.role === 'candidate') {
-    await profileStore.loadProfile()
-    if (profileStore.defaultResumeId) {
-      selectedResumeId.value = profileStore.defaultResumeId
-    }
+    await Promise.all([
+      profileStore.loadProfile(),
+      fetchResumes()
+    ])
   }
 })
 
@@ -73,6 +95,12 @@ function handleApplyClick() {
   }
 
   isModalOpen.value = true
+}
+
+function onResumeUploaded(resume: any) {
+  resumes.value.unshift(resume)
+  selectedResumeId.value = resume.id
+  showSuccess('Resume uploaded and selected!')
 }
 
 async function doSubmitApplication() {
@@ -164,20 +192,32 @@ async function doSubmitApplication() {
           </div>
         </div>
 
-        <div v-if="submissionMode === 'resume'">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Select Resume</label>
-          <select
-            v-if="profileStore.profile?.default_resume_id"
-            v-model="selectedResumeId"
-            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            required
-          >
-            <option :value="profileStore.profile.default_resume_id">
-              Default Resume ({{ profileStore.profile.default_resume?.original_name }})
-            </option>
-          </select>
-          <p v-else class="text-sm text-amber-600 bg-amber-50 p-3 rounded border border-amber-200">
-            You don't have a default resume. Please go to your profile to upload one.
+        <div v-if="submissionMode === 'resume'" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Select Resume</label>
+            <select
+              v-if="resumes.length > 0"
+              v-model="selectedResumeId"
+              class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              required
+            >
+              <option v-for="resume in resumes" :key="resume.id" :value="resume.id">
+                {{ resume.original_name }} {{ profileStore.defaultResumeId === resume.id ? '(Default)' : '' }}
+              </option>
+            </select>
+            <p v-else class="text-sm text-amber-600 bg-amber-50 p-3 rounded border border-amber-200">
+              You haven't uploaded any resumes yet.
+            </p>
+          </div>
+
+          <div class="pt-2">
+            <p class="text-xs text-gray-500 mb-2">Or upload a new one:</p>
+            <ResumeUpload @uploaded="onResumeUploaded" @error="showError" />
+          </div>
+
+          <p class="text-xs text-gray-400">
+            You can manage your default resume in your 
+            <RouterLink to="/candidate/profile" class="text-emerald-600 hover:underline">profile</RouterLink>.
           </p>
         </div>
 
