@@ -16,6 +16,7 @@ const {
   paginationMeta,
   isListLoading,
   executeSearch,
+  store,
 } = useJobSearch()
 
 const profileStore = useCandidateProfileStore()
@@ -86,44 +87,47 @@ async function submitApplication() {
       <p class="mt-1 text-sm text-slate-500">Discover and apply to your next great opportunity.</p>
     </div>
 
-    <!-- Layout: Sidebar Filters + Job List -->
-    <div class="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8 items-start">
+    <!-- Filters Topbar -->
+    <SearchFilters layout="topbar" @search="executeSearch(1)" />
+    
+    <!-- Job List -->
+    <div class="flex-1 min-w-0 space-y-4 w-full">
       
-      <!-- Filters Sidebar -->
-      <SearchFilters @search="executeSearch(1)" class="sticky top-24" />
+      <div v-if="isListLoading" class="grid gap-4">
+        <div v-for="i in 3" :key="i" class="h-40 animate-pulse rounded-xl border border-slate-200 bg-white"></div>
+      </div>
       
-      <!-- Job List Column -->
-      <div class="space-y-4">
-        
-        <div v-if="isListLoading" class="grid gap-4">
-          <div v-for="i in 3" :key="i" class="h-40 animate-pulse rounded-xl border border-slate-200 bg-white"></div>
+      <div v-else-if="jobs.length === 0" class="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
+        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Briefcase class="w-8 h-8 text-slate-400" />
         </div>
-        
-        <div v-else-if="jobs.length === 0" class="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
-          <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Briefcase class="w-8 h-8 text-slate-400" />
-          </div>
-          <h3 class="text-lg font-semibold text-slate-900">No jobs found</h3>
-          <p class="text-slate-500 mt-2 text-sm max-w-sm mx-auto">Try adjusting your search filters to find what you're looking for.</p>
-        </div>
+        <h3 class="text-lg font-semibold text-slate-900">No jobs found</h3>
+        <p class="text-slate-500 mt-2 text-sm max-w-sm mx-auto">Try adjusting your search filters to find what you're looking for.</p>
+        <button 
+          v-if="store.activeFiltersCount > 0"
+          @click="store.resetFilters(); executeSearch(1);"
+          class="mt-4 text-sm font-medium text-emerald-600 hover:text-emerald-700"
+        >
+          Clear all filters
+        </button>
+      </div>
 
-        <div v-else class="grid gap-4">
-          <div
-            v-for="job in jobs"
-            :key="job.id"
-            class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all"
-          >
-            <JobCard :job="job" @apply="openApplyModal" />
-          </div>
-          
-          <div v-if="paginationMeta && paginationMeta.last_page > 1" class="mt-4 flex justify-center">
-            <Pagination
-              :links="paginationLinks"
-              :meta="paginationMeta"
-              :disabled="isListLoading"
-              @page-change="executeSearch"
-            />
-          </div>
+      <div v-else class="grid gap-4">
+        <div
+          v-for="job in jobs"
+          :key="job.id"
+          class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all"
+        >
+          <JobCard :job="job" @apply="openApplyModal" />
+        </div>
+        
+        <div v-if="paginationMeta && paginationMeta.last_page > 1" class="mt-4 flex justify-center">
+          <Pagination
+            :links="paginationLinks"
+            :meta="paginationMeta"
+            :disabled="isListLoading"
+            @page-change="executeSearch"
+          />
         </div>
       </div>
     </div>

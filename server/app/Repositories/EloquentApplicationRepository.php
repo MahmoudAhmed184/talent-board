@@ -30,12 +30,14 @@ class EloquentApplicationRepository implements ApplicationRepositoryInterface
             ->first();
     }
 
-    public function paginateForCandidate(User $candidate, int $perPage, ?ApplicationStatus $status): LengthAwarePaginator
+    public function paginateForCandidate(User $candidate, int $perPage, ?ApplicationStatus $status, ?string $fromDate = null, ?string $toDate = null): LengthAwarePaginator
     {
         return Application::query()
             ->with(['jobListing', 'jobListing.employer', 'jobListing.employer.employerProfile'])
             ->where('candidate_id', $candidate->id)
             ->when($status, fn ($query) => $query->where('status', $status->value))
+            ->when($fromDate, fn ($query) => $query->whereDate('submitted_at', '>=', $fromDate))
+            ->when($toDate, fn ($query) => $query->whereDate('submitted_at', '<=', $toDate))
             ->latest('submitted_at')
             ->latest('id')
             ->paginate($perPage);

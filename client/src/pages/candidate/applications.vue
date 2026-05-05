@@ -69,10 +69,6 @@ const statusOptions = [
   { value: 'cancelled', label: 'Cancelled' },
 ]
 
-function onStatusFilterChange(event: Event) {
-  const target = event.target as HTMLSelectElement
-  store.setFilterAndLoad(target.value || undefined)
-}
 
 function getStatusBadge(status: string) {
   switch (status) {
@@ -96,24 +92,72 @@ function getStatusLabel(status: string) {
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Applications</h1>
-        <p class="mt-1 text-sm text-slate-500">Track and manage your job applications.</p>
-      </div>
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900">Applications</h1>
+      <p class="mt-1 text-sm text-slate-500">Track and manage your job applications.</p>
+    </div>
 
-      <div class="flex items-center gap-3">
-        <div class="relative">
-          <Filter class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <select
-            :value="store.currentStatusFilter || ''"
-            @change="onStatusFilterChange"
-            class="pl-9 pr-8 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 appearance-none shadow-sm transition-all"
+    <!-- Filters Topbar -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+      <div class="flex flex-wrap items-end gap-4">
+        <!-- Status Filter -->
+        <div class="flex-1 min-w-[200px]">
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Status</label>
+          <div class="relative">
+            <Filter class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            <select
+              :value="store.currentStatusFilter || ''"
+              @change="(e) => store.setFilterAndLoad((e.target as HTMLSelectElement).value || undefined)"
+              class="h-10 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-8 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all appearance-none cursor-pointer"
+            >
+              <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+            <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Date Range -->
+        <div class="flex-[2] min-w-[300px] grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">From Date</label>
+            <div class="relative">
+              <Calendar class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              <input
+                type="date"
+                v-model="store.fromDate"
+                @change="store.loadPage(1)"
+                class="h-10 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-3 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all"
+              >
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">To Date</label>
+            <div class="relative">
+              <Calendar class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              <input
+                type="date"
+                v-model="store.toDate"
+                @change="store.loadPage(1)"
+                class="h-10 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-3 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all"
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Reset Button -->
+        <div class="flex items-center pb-0.5">
+          <button
+            v-if="store.currentStatusFilter || store.fromDate || store.toDate"
+            @click="store.resetFilters()"
+            class="h-10 px-4 inline-flex items-center justify-center gap-2 text-sm font-medium text-slate-500 hover:text-red-600 transition-colors border border-transparent rounded-lg hover:bg-red-50"
           >
-            <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">
-              {{ opt.label }}
-            </option>
-          </select>
+            <RotateCcw class="w-4 h-4" />
+            Reset
+          </button>
         </div>
       </div>
     </div>
@@ -130,9 +174,21 @@ function getStatusLabel(status: string) {
       </div>
       <h3 class="text-lg font-semibold text-slate-900">No applications found</h3>
       <p class="text-slate-500 mt-2 text-sm max-w-sm mx-auto">You haven't submitted any applications that match the current filters.</p>
-      <RouterLink to="/candidate/jobs" class="mt-6 inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors shadow-sm gap-2">
-        Browse Jobs <Briefcase class="w-4 h-4" />
-      </RouterLink>
+      
+      <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <button
+          v-if="store.currentStatusFilter || store.fromDate || store.toDate"
+          @click="store.resetFilters()"
+          class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors gap-2"
+        >
+          <RotateCcw class="w-4 h-4" />
+          Clear filters
+        </button>
+        
+        <RouterLink to="/candidate/jobs" class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors shadow-sm gap-2">
+          Browse Jobs <Briefcase class="w-4 h-4" />
+        </RouterLink>
+      </div>
     </div>
 
     <!-- List -->

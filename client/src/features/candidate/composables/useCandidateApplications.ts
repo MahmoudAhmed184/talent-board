@@ -6,6 +6,8 @@ import type { JsonApiPaginatedResponse } from '../../../types/pagination'
 interface FetchApplicationsParams {
   page?: number
   status?: string
+  from_date?: string
+  to_date?: string
 }
 
 export function useCandidateApplications() {

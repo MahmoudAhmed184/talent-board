@@ -35,9 +35,11 @@ class ApplicationController extends Controller
         $status = $request->query('status');
         $statusEnum = $status ? ApplicationStatus::tryFrom($status) : null;
         $perPage = $request->query('per_page', 15);
+        $fromDate = $request->query('from_date');
+        $toDate = $request->query('to_date');
 
         return CandidateApplicationResource::collection(
-            $this->applicationService->listForCandidate($user, (int) $perPage, $statusEnum)
+            $this->applicationService->listForCandidate($user, (int) $perPage, $statusEnum, $fromDate, $toDate)
         );
     }
 

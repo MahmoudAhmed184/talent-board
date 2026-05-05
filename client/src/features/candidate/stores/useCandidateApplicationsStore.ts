@@ -8,6 +8,8 @@ export const useCandidateApplicationsStore = defineStore('candidate-applications
   const { fetchApplications, cancelApplication: apiCancelApplication, isCancelling } = useCandidateApplications()
   
   const currentStatusFilter = ref<string | undefined>(undefined)
+  const fromDate = ref<string | undefined>(undefined)
+  const toDate = ref<string | undefined>(undefined)
 
   const {
     items: applications,
@@ -18,12 +20,25 @@ export const useCandidateApplicationsStore = defineStore('candidate-applications
     isLoading: isFetching,
     loadPage,
   } = usePagination<CandidateApplication>({
-    fetchPage: (page) => fetchApplications(page, { status: currentStatusFilter.value })
+    fetchPage: (page) => fetchApplications(page, { 
+      status: currentStatusFilter.value,
+      from_date: fromDate.value,
+      to_date: toDate.value,
+    })
   })
 
-  async function setFilterAndLoad(status?: string) {
-    currentStatusFilter.value = status
+  async function setFilterAndLoad(status?: string, from?: string, to?: string) {
+    if (status !== undefined) currentStatusFilter.value = status
+    if (from !== undefined) fromDate.value = from
+    if (to !== undefined) toDate.value = to
     await loadPage(1)
+  }
+
+  function resetFilters() {
+    currentStatusFilter.value = undefined
+    fromDate.value = undefined
+    toDate.value = undefined
+    loadPage(1)
   }
 
   async function cancelApplication(id: number) {
@@ -41,6 +56,8 @@ export const useCandidateApplicationsStore = defineStore('candidate-applications
     cancelApplication,
     currentPage,
     currentStatusFilter,
+    fromDate,
+    toDate,
     isCancelling,
     isFetching,
     lastPage,
@@ -48,5 +65,6 @@ export const useCandidateApplicationsStore = defineStore('candidate-applications
     loadPage,
     meta,
     setFilterAndLoad,
+    resetFilters,
   }
 })

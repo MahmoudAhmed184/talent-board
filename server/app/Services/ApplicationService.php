@@ -77,8 +77,10 @@ class ApplicationService
         User $candidate,
         int $perPage = 15,
         ?ApplicationStatus $status = null,
+        ?string $fromDate = null,
+        ?string $toDate = null,
     ): LengthAwarePaginator {
-        return $this->applications->paginateForCandidate($candidate, $perPage, $status);
+        return $this->applications->paginateForCandidate($candidate, $perPage, $status, $fromDate, $toDate);
     }
 
     /**

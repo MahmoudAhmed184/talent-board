@@ -13,6 +13,7 @@ const {
   isListLoading,
   executeSearch,
   syncFromQuery,
+  store,
 } = useJobSearch()
 
 onMounted(async () => {
@@ -36,13 +37,15 @@ onMounted(async () => {
     </header>
 
     <!-- Layout: Sidebar Filters + Job List -->
-    <div class="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8 items-start">
+    <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
       
       <!-- Filters Sidebar -->
-      <SearchFilters @search="executeSearch(1)" class="sticky top-24" />
+      <div class="w-full lg:w-64 shrink-0 lg:sticky lg:top-24">
+        <SearchFilters layout="sidebar" @search="executeSearch(1)" />
+      </div>
       
       <!-- Job List Column -->
-      <div class="space-y-4">
+      <div class="flex-1 min-w-0 space-y-4 w-full">
         
         <div v-if="isListLoading" class="grid gap-4">
           <div v-for="i in 3" :key="i" class="h-40 animate-pulse rounded-xl border border-slate-200 bg-white"></div>

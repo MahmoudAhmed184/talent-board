@@ -13,7 +13,7 @@ interface ApplicationRepositoryInterface
 
     public function findForEmployer(User $employer, Application $application): ?Application;
 
-    public function paginateForCandidate(User $candidate, int $perPage, ?ApplicationStatus $status): LengthAwarePaginator;
+    public function paginateForCandidate(User $candidate, int $perPage, ?ApplicationStatus $status, ?string $fromDate = null, ?string $toDate = null): LengthAwarePaginator;
 
     public function findForCandidate(User $candidate, Application $application): ?Application;
 
