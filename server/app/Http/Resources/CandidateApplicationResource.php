@@ -19,14 +19,14 @@ class CandidateApplicationResource extends JsonResource
         return [
             'id' => $this->id,
             'job_listing_id' => $this->job_listing_id,
-            'job_listing' => $this->whenLoaded('jobListing', fn (): array => [
+            'job_listing' => [
                 'id' => $this->jobListing?->id,
                 'title' => $this->jobListing?->title,
                 'employer' => [
                     'id' => $this->jobListing?->employer?->id,
-                    'company_name' => $this->jobListing?->employer?->employerProfile?->company_name,
+                    'company_name' => $this->jobListing?->employer?->employerProfile?->company_name ?? 'Unknown Company',
                 ],
-            ]),
+            ],
             'status' => $this->status->value,
             'submission_mode' => $this->resume_path ? 'resume' : 'contact',
             'cover_letter' => $this->cover_letter,

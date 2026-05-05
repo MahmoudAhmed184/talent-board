@@ -10,7 +10,7 @@ class ApplicationPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->role === UserRole::Employer;
+        return in_array($user->role, [UserRole::Employer, UserRole::Candidate]);
     }
 
     public function view(User $user, Application $application): bool
