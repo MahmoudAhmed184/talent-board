@@ -4,7 +4,8 @@ import { useRouter, useRoute } from 'vue-router'
 
 export function useJobSearch() {
   const store = useSearchStore()
-  const { jobs, paginationLinks, paginationMeta, isListLoading, loadJobs } = usePublicJobs()
+  const { jobs, formError, paginationLinks, paginationMeta, isListLoading, loadJobs } =
+    usePublicJobs()
   const router = useRouter()
   const route = useRoute()
 
@@ -20,6 +21,7 @@ export function useJobSearch() {
       salary_min: store.salary_min,
       salary_max: store.salary_max,
       posted_after: store.posted_after,
+      posted_before: store.posted_before,
       page: store.page,
     })
 
@@ -33,6 +35,7 @@ export function useJobSearch() {
     if (store.salary_min) query.salary_min = store.salary_min
     if (store.salary_max) query.salary_max = store.salary_max
     if (store.posted_after) query.posted_after = store.posted_after
+    if (store.posted_before) query.posted_before = store.posted_before
     if (store.page > 1) query.page = store.page
 
     router.replace({ query })
@@ -47,11 +50,13 @@ export function useJobSearch() {
     store.salary_min = route.query.salary_min ? Number(route.query.salary_min) : null
     store.salary_max = route.query.salary_max ? Number(route.query.salary_max) : null
     store.posted_after = (route.query.posted_after as string) || null
+    store.posted_before = (route.query.posted_before as string) || null
     store.page = route.query.page ? Number(route.query.page) : 1
   }
 
   return {
     jobs,
+    formError,
     paginationLinks,
     paginationMeta,
     isListLoading,

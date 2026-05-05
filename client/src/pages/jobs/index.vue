@@ -1,20 +1,14 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { Briefcase } from 'lucide-vue-next'
 import { useJobSearch } from '../../composables/useJobSearch'
 import Pagination from '../../components/Pagination.vue'
-import SearchFilters from '../../components/SearchFilters.vue'
+import SearchLayout from '../../layouts/SearchLayout.vue'
+import JobFilters from '../../features/jobs/components/JobFilters.vue'
 import JobCard from '../../features/jobs/components/JobCard.vue'
-import { useAuthStore } from '../../features/auth/stores/useAuthStore'
-import { useCandidateApplicationsStore } from '../../features/candidate/stores/useCandidateApplicationsStore'
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
-const authStore = useAuthStore()
-const applicationStore = useCandidateApplicationsStore()
 
 const {
   jobs,
+  formError,
   paginationLinks,
   paginationMeta,
   isListLoading,
@@ -25,75 +19,84 @@ const {
 
 onMounted(async () => {
   syncFromQuery()
-  await executeSearch(1)
-  
-  if (authStore.user?.role === 'candidate') {
-    applicationStore.fetchAppliedJobIds()
-  }
+  await executeSearch(store.page)
 })
-
-function handleApply(job: any) {
-  router.push(`/jobs/${job.id}`)
-}
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto px-4 md:px-8 py-8 sm:py-10 space-y-8">
-    <!-- Header -->
-    <header>
-      <p class="text-xs font-semibold uppercase tracking-wider text-emerald-600 mb-2">
+  <section class="py-8 sm:py-10">
+    <header class="mb-8 flex flex-col gap-2">
+      <p class="text-xs font-semibold uppercase tracking-wider text-emerald-700">
         Public jobs
       </p>
-      <h1 class="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Browse jobs</h1>
-      <p class="mt-2 max-w-2xl text-lg text-slate-600">
-        Search approved openings, compare work mode and salary, then open the full
-        listing when a role looks relevant.
-      </p>
+      <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h1 class="text-3xl font-semibold text-slate-950 sm:text-4xl">Browse jobs</h1>
+          <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+            Search approved openings, compare work mode and salary, then open the full
+            listing when a role looks relevant.
+          </p>
+        </div>
+      </div>
     </header>
 
-    <!-- Layout: Sidebar Filters + Job List -->
-    <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
-      
-      <!-- Filters Sidebar -->
-      <div class="w-full lg:w-64 shrink-0 lg:sticky lg:top-24">
-        <SearchFilters layout="sidebar" @search="executeSearch(1)" />
-      </div>
-      
-      <!-- Job List Column -->
-      <div class="flex-1 min-w-0 space-y-4 w-full">
-        
-        <div v-if="isListLoading" class="grid gap-4">
-          <div v-for="i in 3" :key="i" class="h-40 animate-pulse rounded-xl border border-slate-200 bg-white"></div>
+    <SearchLayout>
+      <template #sidebar>
+        <JobFilters @search="executeSearch(1)" />
+      </template>
+
+      <div class="grid gap-6">
+        <div v-if="isListLoading" class="grid gap-3" role="status">
+          <div
+            v-for="index in 3"
+            :key="index"
+            class="h-36 animate-pulse rounded-lg border border-slate-200 bg-white"
+          />
         </div>
-        
-        <div v-else-if="jobs.length === 0" class="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
-          <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Briefcase class="w-8 h-8 text-slate-400" />
-          </div>
-          <h3 class="text-lg font-semibold text-slate-900">No jobs found</h3>
-          <p class="text-slate-500 mt-2 text-sm max-w-sm mx-auto">Try adjusting your search filters to find what you're looking for.</p>
+
+        <div
+          v-else-if="formError"
+          class="rounded-lg border border-dashed border-red-200 bg-red-50 px-5 py-12 text-center"
+          role="alert"
+        >
+          <p class="text-base font-medium text-slate-900">Unable to load jobs</p>
+          <p class="mt-1 text-sm text-red-700">{{ formError }}</p>
+          <button
+            type="button"
+            class="mt-4 inline-flex h-10 items-center justify-center rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            @click="executeSearch(store.page)"
+          >
+            Retry
+          </button>
+        </div>
+
+        <div
+          v-else-if="jobs.length === 0"
+          class="rounded-lg border border-dashed border-slate-300 bg-white px-5 py-12 text-center"
+        >
+          <p class="text-base font-medium text-slate-900">No jobs found</p>
+          <p class="mt-1 text-sm text-slate-600">Try adjusting your filters.</p>
         </div>
 
         <div v-else class="grid gap-4">
-          <div
-            v-for="job in jobs"
-            :key="job.id"
-            class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all"
-          >
-            <!-- Reuse the same JobCard component. -->
-            <JobCard :job="job" @apply="handleApply" />
-          </div>
-          
-          <div v-if="paginationMeta && paginationMeta.last_page > 1" class="mt-4 flex justify-center">
-            <Pagination
-              :links="paginationLinks"
-              :meta="paginationMeta"
-              :disabled="isListLoading"
-              @page-change="executeSearch"
-            />
-          </div>
+          <ul class="grid gap-4">
+            <li
+              v-for="job in jobs"
+              :key="job.id"
+              class="rounded-lg border border-slate-200 bg-white shadow-sm transition hover:border-emerald-200 hover:shadow-md"
+            >
+              <JobCard :job="job" />
+            </li>
+          </ul>
+
+          <Pagination
+            :links="paginationLinks"
+            :meta="paginationMeta"
+            :disabled="isListLoading"
+            @page-change="executeSearch"
+          />
         </div>
       </div>
-    </div>
-  </div>
+    </SearchLayout>
+  </section>
 </template>

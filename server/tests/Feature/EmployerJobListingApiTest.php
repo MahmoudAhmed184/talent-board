@@ -1,8 +1,10 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Models\Category;
 use App\Models\EmployerProfile;
 use App\Models\JobListing;
+use App\Models\Location;
 
 function validJobPayload(array $overrides = []): array
 {
@@ -11,8 +13,8 @@ function validJobPayload(array $overrides = []): array
         'description' => 'Build and maintain marketplace APIs with Laravel, queues, and Vue integrations.',
         'responsibilities' => 'Own API delivery, testing, and integration support.',
         'qualifications' => 'Strong Laravel, SQL, and pragmatic product delivery experience.',
-        'location' => 'Cairo',
-        'category' => 'Engineering',
+        'location_id' => Location::factory()->create()->id,
+        'category_id' => Category::factory()->create()->id,
         'work_type' => 'hybrid',
         'experience_level' => 'senior',
         'salary_min' => 60000,
@@ -40,23 +42,30 @@ test('employer registration creates related employer profile', function () {
 
 test('employer can create pending job listing through api', function () {
     $employer = actingAsEmployer();
+    $category = Category::factory()->create(['name' => 'Engineering', 'slug' => 'engineering']);
+    $location = Location::factory()->create(['name' => 'Cairo', 'slug' => 'cairo']);
 
-    $this->postJson('/api/v1/employer/jobs', validJobPayload())
+    $this->postJson('/api/v1/employer/jobs', validJobPayload([
+        'category_id' => $category->id,
+        'location_id' => $location->id,
+    ]))
         ->assertCreated()
         ->assertJsonPath('data.title', 'Senior Laravel Engineer')
         ->assertJsonPath('data.approval_status', 'pending');
 
     $this->assertDatabaseHas('job_listings', [
-        'employer_id' => $employer->id,
+        'employer_user_id' => $employer->id,
         'title' => 'Senior Laravel Engineer',
         'approval_status' => 'pending',
+        'category_id' => $category->id,
+        'location_id' => $location->id,
     ]);
 });
 
 test('listing owners can list view update and delete their jobs', function () {
     $employer = actingAsEmployer();
     $job = JobListing::factory()->create([
-        'employer_id' => $employer->id,
+        'employer_user_id' => $employer->id,
         'title' => 'Original title',
         'approval_status' => 'approved',
         'published_at' => now()->subDay(),

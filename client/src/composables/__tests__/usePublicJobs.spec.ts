@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 import { usePublicJobs } from '../usePublicJobs'
 
 const { getMock } = vi.hoisted(() => ({
@@ -13,6 +14,7 @@ vi.mock('../../http', () => ({
 
 describe('usePublicJobs', () => {
   beforeEach(() => {
+    setActivePinia(createPinia())
     getMock.mockReset()
   })
 
@@ -48,15 +50,38 @@ describe('usePublicJobs', () => {
     expect(getMock).toHaveBeenCalledWith('/api/v1/jobs', {
       params: {
         q: 'frontend',
-        location: undefined,
-        category: undefined,
+        location_id: undefined,
+        category_id: undefined,
         work_type: undefined,
         experience_level: undefined,
-        date_posted: undefined,
+        salary_min: undefined,
+        salary_max: undefined,
+        posted_after: undefined,
+        posted_before: undefined,
         page: 1,
         per_page: 15,
       },
     })
+  })
+
+  it('loads a public job detail into selected state', async () => {
+    getMock.mockResolvedValueOnce({
+      data: {
+        data: {
+          id: 10,
+          title: 'Frontend Engineer',
+          description: 'Build a resilient public jobs experience.',
+        },
+      },
+    })
+
+    const jobs = usePublicJobs()
+    await jobs.loadJob(10)
+
+    expect(jobs.selectedJob.value?.id).toBe(10)
+    expect(jobs.selectedJob.value?.title).toBe('Frontend Engineer')
+    expect(jobs.formError.value).toBe(null)
+    expect(getMock).toHaveBeenCalledWith('/api/v1/jobs/10')
   })
 
   it('returns empty list and error message when request fails', async () => {

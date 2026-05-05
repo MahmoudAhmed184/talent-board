@@ -13,8 +13,11 @@ use App\Repositories\EloquentApplicationRepository;
 use App\Repositories\EloquentEmployerProfileRepository;
 use App\Repositories\EloquentJobListingRepository;
 use App\Repositories\EloquentUserRepository;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
 
@@ -43,6 +46,7 @@ class AppServiceProvider extends ServiceProvider
         config(['broadcasting.default' => 'log']);
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
         Event::listen(ApplicationStatusChanged::class, BroadcastApplicationStatusChanged::class);
+        $this->configureRateLimiting();
 
         Queue::route([
             'App\\Jobs\\ProcessResumeUpload' => 'files',
@@ -52,5 +56,26 @@ class AppServiceProvider extends ServiceProvider
             'App\\Jobs\\BroadcastApplicationStatusChanged' => 'broadcasts',
             'App\\Jobs\\WarmJobListingCache' => 'cache',
         ]);
+    }
+
+    private function configureRateLimiting(): void
+    {
+        RateLimiter::for('admin-moderation', function (Request $request): Limit {
+            $userId = (string) ($request->user()?->id ?? 'guest');
+
+            return Limit::perMinute(30)->by($userId.'|'.$request->ip());
+        });
+
+        RateLimiter::for('employer-decisions', function (Request $request): Limit {
+            $userId = (string) ($request->user()?->id ?? 'guest');
+
+            return Limit::perMinute(40)->by($userId.'|'.$request->ip());
+        });
+
+        RateLimiter::for('employer-jobs-write', function (Request $request): Limit {
+            $userId = (string) ($request->user()?->id ?? 'guest');
+
+            return Limit::perMinute(30)->by($userId.'|'.$request->ip());
+        });
     }
 }

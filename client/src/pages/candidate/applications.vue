@@ -20,26 +20,25 @@ const appToCancel = ref<number | null>(null)
 
 onMounted(async () => {
   await store.loadPage(1)
-  
-  if (!authStore.user?.id) {
-    return
-  }
+  if (authStore.user?.id) {
+    await echo.prepareRealtimeAuth().catch(() => undefined)
 
-  echo.subscribePrivate<ApplicationStatusChangedPayload>(
-    `application-status.candidate.${authStore.user.id}`,
-    '.ApplicationStatusChanged',
-    (payload) => {
-      const index = store.applications.findIndex(a => a.id === payload.application_id)
-      if (index !== -1) {
-        store.applications[index].status = payload.status
-        store.applications[index].decision = {
-          note: null,
-          decided_at: payload.changed_at,
+    echo.subscribePrivate<ApplicationStatusChangedPayload>(
+      `application-status.candidate.${authStore.user.id}`,
+      '.ApplicationStatusChanged',
+      (payload) => {
+        const index = store.applications.findIndex((a) => a.id === payload.application_id)
+        if (index !== -1) {
+          store.applications[index].status = payload.status
+          store.applications[index].decision = {
+            note: null,
+            decided_at: payload.changed_at,
+          }
         }
-      }
-      showSuccess(`Application status updated: ${payload.status}`)
-    },
-  )
+        showSuccess(`Application status updated: ${payload.status}`)
+      },
+    )
+  }
 })
 
 function confirmCancel(id: number) {

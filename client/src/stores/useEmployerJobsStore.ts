@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import { http } from '../http'
 import { useFormErrors, type ApiErrorPayload } from '../composables/useFormErrors'
 import type { EmployerJobFormData, EmployerJobPayload } from '../composables/useEmployerJobForm'
+import type { JsonApiPaginatedResponse, JsonApiPaginationLinks, JsonApiPaginationMeta } from '../types/pagination'
 
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected'
 
@@ -12,7 +13,9 @@ export interface EmployerJob {
   description: string
   responsibilities: string | null
   qualifications: string | null
+  location_id: number | null
   location: string
+  category_id: number | null
   category: string
   work_type: string
   experience_level: string
@@ -25,12 +28,30 @@ export interface EmployerJob {
   updated_at: string | null
 }
 
-interface CollectionResponse<TData> {
-  data: TData[]
-}
+type CollectionResponse<TData> = JsonApiPaginatedResponse<TData>
 
 interface SingleResponse<TData> {
   data: TData
+}
+
+function emptyLinks(): JsonApiPaginationLinks {
+  return {
+    first: null,
+    last: null,
+    next: null,
+    prev: null,
+  }
+}
+
+function emptyMeta(): JsonApiPaginationMeta {
+  return {
+    current_page: 1,
+    from: null,
+    last_page: 1,
+    per_page: 15,
+    to: null,
+    total: 0,
+  }
 }
 
 function formatDateForInput(value: string | null): string {
@@ -43,8 +64,8 @@ export function toEmployerJobFormData(job: EmployerJob): EmployerJobFormData {
     description: job.description,
     responsibilities: job.responsibilities ?? '',
     qualifications: job.qualifications ?? '',
-    location: job.location,
-    category: job.category,
+    locationId: job.location_id === null ? '' : String(job.location_id),
+    categoryId: job.category_id === null ? '' : String(job.category_id),
     workType: job.work_type,
     experienceLevel: job.experience_level,
     salaryMin: job.salary_min === null ? '' : String(job.salary_min),
@@ -56,6 +77,8 @@ export function toEmployerJobFormData(job: EmployerJob): EmployerJobFormData {
 export const useEmployerJobsStore = defineStore('employer-jobs', () => {
   const jobs = ref<EmployerJob[]>([])
   const currentJob = ref<EmployerJob | null>(null)
+  const paginationLinks = ref<JsonApiPaginationLinks>(emptyLinks())
+  const paginationMeta = ref<JsonApiPaginationMeta>(emptyMeta())
   const isLoading = ref(false)
   const isSaving = ref(false)
   const isDeleting = ref(false)
@@ -67,16 +90,22 @@ export const useEmployerJobsStore = defineStore('employer-jobs', () => {
 
   const isEmpty = computed(() => !isLoading.value && jobs.value.length === 0)
 
-  async function fetchJobs(): Promise<void> {
+  async function fetchJobs(page = 1): Promise<void> {
     clearErrors()
     isLoading.value = true
 
     try {
-      const response = await http.get<CollectionResponse<EmployerJob>>('/api/v1/employer/jobs')
+      const response = await http.get<CollectionResponse<EmployerJob>>('/api/v1/employer/jobs', {
+        params: { page },
+      })
       jobs.value = response.data.data
+      paginationLinks.value = response.data.links
+      paginationMeta.value = response.data.meta
     } catch (error) {
       mapApiErrors(error as ApiErrorPayload)
       jobs.value = []
+      paginationLinks.value = emptyLinks()
+      paginationMeta.value = emptyMeta()
     } finally {
       isLoading.value = false
     }
@@ -157,6 +186,8 @@ export const useEmployerJobsStore = defineStore('employer-jobs', () => {
   return {
     jobs,
     currentJob,
+    paginationLinks,
+    paginationMeta,
     formError,
     isDeleting,
     isEmpty,

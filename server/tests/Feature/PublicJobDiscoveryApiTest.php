@@ -1,13 +1,18 @@
 <?php
 
+use App\Models\Category;
 use App\Models\JobListing;
+use App\Models\Location;
 
 test('public job search returns only approved non expired listings', function () {
+    $category = Category::factory()->create(['name' => 'Engineering', 'slug' => 'engineering']);
+    $location = Location::factory()->create(['name' => 'Cairo', 'slug' => 'cairo']);
+
     JobListing::factory()->approved()->create([
         'title' => 'Frontend Vue Engineer',
         'description' => 'Build public job discovery with Vue and TypeScript.',
-        'category' => 'Engineering',
-        'location' => 'Cairo',
+        'category_id' => $category->id,
+        'location_id' => $location->id,
         'work_type' => 'remote',
         'experience_level' => 'mid',
         'salary_min' => 50000,
@@ -16,7 +21,7 @@ test('public job search returns only approved non expired listings', function ()
     JobListing::factory()->create(['title' => 'Pending Vue Engineer']);
     JobListing::factory()->approved()->expired()->create(['title' => 'Expired Vue Engineer']);
 
-    $this->getJson('/api/v1/jobs?q=Vue&location=Cairo&category=Engineering&work_type=remote&experience_level=mid&salary_min=45000&salary_max=90000')
+    $this->getJson("/api/v1/jobs?q=Vue&location_id={$location->id}&category_id={$category->id}&work_type=remote&experience_level=mid&salary_min=45000&salary_max=90000")
         ->assertOk()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.title', 'Frontend Vue Engineer')
@@ -40,20 +45,22 @@ test('public job detail hides unavailable listings', function () {
 });
 
 test('public job pagination preserves active filters in navigation links', function () {
+    $category = Category::factory()->create(['name' => 'Engineering', 'slug' => 'engineering']);
+
     JobListing::factory()
         ->approved()
         ->count(3)
-        ->create(['category' => 'Engineering']);
+        ->create(['category_id' => $category->id]);
 
-    $response = $this->getJson('/api/v1/jobs?category=Engineering&per_page=1&page=2')
+    $response = $this->getJson("/api/v1/jobs?category_id={$category->id}&per_page=1&page=2")
         ->assertOk()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('meta.current_page', 2)
         ->assertJsonPath('meta.per_page', 1)
         ->assertJsonPath('meta.total', 3);
 
-    expect($response->json('links.next'))->toContain('category=Engineering');
+    expect($response->json('links.next'))->toContain("category_id={$category->id}");
     expect($response->json('links.next'))->toContain('per_page=1');
-    expect($response->json('links.prev'))->toContain('category=Engineering');
+    expect($response->json('links.prev'))->toContain("category_id={$category->id}");
     expect($response->json('links.prev'))->toContain('per_page=1');
 });

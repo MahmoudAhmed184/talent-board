@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
+import Pagination from '../../components/Pagination.vue'
 import { useEmployerJobsStore, type ApprovalStatus } from '../../stores/useEmployerJobsStore'
 
 const jobsStore = useEmployerJobsStore()
@@ -20,6 +21,10 @@ const pendingJobs = computed(
 
 async function removeJob(jobId: number) {
   await jobsStore.deleteJob(jobId)
+}
+
+async function changePage(page: number) {
+  await jobsStore.fetchJobs(page)
 }
 
 onMounted(async () => {
@@ -135,5 +140,12 @@ onMounted(async () => {
         </article>
       </li>
     </ul>
+
+    <Pagination
+      :links="jobsStore.paginationLinks"
+      :meta="jobsStore.paginationMeta"
+      :disabled="jobsStore.isLoading"
+      @page-change="changePage"
+    />
   </section>
 </template>

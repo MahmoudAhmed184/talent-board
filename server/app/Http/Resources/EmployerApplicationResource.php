@@ -33,8 +33,6 @@ class EmployerApplicationResource extends JsonResource
                 'email' => $this->candidate?->email,
             ],
             'resume' => [
-                'disk' => $this->resume_disk,
-                'path' => $this->resume_path,
                 'original_name' => $this->resume_original_name,
             ],
             'submitted_at' => $this->submitted_at?->toIso8601String(),
