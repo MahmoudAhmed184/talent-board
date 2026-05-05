@@ -2,9 +2,10 @@
 import { type PublicJobDetail } from '../../../composables/usePublicJobs'
 import { sentenceCase, formatSalaryRange } from '../utils/formatters'
 
-const { job, hasApplied = false } = defineProps<{
+const { job, hasApplied = false, isApplying = false } = defineProps<{
   job: PublicJobDetail
   hasApplied?: boolean
+  isApplying?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -91,13 +92,14 @@ const emit = defineEmits<{
             class="mt-6 w-full rounded-md py-3 text-sm font-semibold transition-colors"
             :class="[
               hasApplied 
-                ? 'bg-slate-200 text-slate-500 cursor-not-allowed' 
-                : 'bg-emerald-700 text-white hover:bg-emerald-800'
+                ? 'bg-slate-100 text-slate-500 border border-slate-200 cursor-not-allowed' 
+                : 'bg-emerald-700 text-white hover:bg-emerald-800 shadow-sm'
             ]"
-            :disabled="hasApplied"
+            :disabled="hasApplied || isApplying"
             @click="emit('apply')"
           >
-            {{ hasApplied ? 'Already Applied' : 'Apply Now' }}
+            <span v-if="isApplying">Submitting...</span>
+            <span v-else>{{ hasApplied ? 'Already Applied' : 'Apply Now' }}</span>
           </button>
         </div>
       </aside>

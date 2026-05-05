@@ -5,6 +5,13 @@ import { useJobSearch } from '../../composables/useJobSearch'
 import Pagination from '../../components/Pagination.vue'
 import SearchFilters from '../../components/SearchFilters.vue'
 import JobCard from '../../features/jobs/components/JobCard.vue'
+import { useAuthStore } from '../../features/auth/stores/useAuthStore'
+import { useCandidateApplicationsStore } from '../../features/candidate/stores/useCandidateApplicationsStore'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const authStore = useAuthStore()
+const applicationStore = useCandidateApplicationsStore()
 
 const {
   jobs,
@@ -19,7 +26,15 @@ const {
 onMounted(async () => {
   syncFromQuery()
   await executeSearch(1)
+  
+  if (authStore.user?.role === 'candidate') {
+    applicationStore.fetchAppliedJobIds()
+  }
 })
+
+function handleApply(job: any) {
+  router.push(`/jobs/${job.id}`)
+}
 </script>
 
 <template>
@@ -65,8 +80,8 @@ onMounted(async () => {
             :key="job.id"
             class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all"
           >
-            <!-- Reuse the same JobCard component. The Apply button logic is handled internally -->
-            <JobCard :job="job" />
+            <!-- Reuse the same JobCard component. -->
+            <JobCard :job="job" @apply="handleApply" />
           </div>
           
           <div v-if="paginationMeta && paginationMeta.last_page > 1" class="mt-4 flex justify-center">

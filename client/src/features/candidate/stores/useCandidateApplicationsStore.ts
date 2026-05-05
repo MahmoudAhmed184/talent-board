@@ -5,8 +5,10 @@ import type { CandidateApplication } from '../types'
 import { usePagination } from '../../../composables/usePagination'
 
 export const useCandidateApplicationsStore = defineStore('candidate-applications', () => {
-  const { fetchApplications, cancelApplication: apiCancelApplication, isCancelling } = useCandidateApplications()
+  const { fetchApplications, cancelApplication: apiCancelApplication, fetchAppliedJobIds: apiFetchAppliedIds, isCancelling } = useCandidateApplications()
   
+  const appliedJobIds = ref<Set<number>>(new Set())
+  const isFetchingIds = ref(false)
   const currentStatusFilter = ref<string | undefined>(undefined)
   const fromDate = ref<string | undefined>(undefined)
   const toDate = ref<string | undefined>(undefined)
@@ -51,6 +53,25 @@ export const useCandidateApplicationsStore = defineStore('candidate-applications
     }
   }
 
+  async function fetchAppliedJobIds() {
+    isFetchingIds.value = true
+    try {
+      const ids = await apiFetchAppliedIds()
+      appliedJobIds.value = new Set(ids)
+    } finally {
+      isFetchingIds.value = false
+    }
+  }
+
+  function isJobApplied(jobId: number | string | undefined) {
+    if (jobId === undefined) return false
+    return appliedJobIds.value.has(Number(jobId))
+  }
+
+  function markJobAsApplied(jobId: number | string) {
+    appliedJobIds.value.add(Number(jobId))
+  }
+
   return {
     applications,
     cancelApplication,
@@ -66,5 +87,10 @@ export const useCandidateApplicationsStore = defineStore('candidate-applications
     meta,
     setFilterAndLoad,
     resetFilters,
+    appliedJobIds,
+    isFetchingIds,
+    fetchAppliedJobIds,
+    isJobApplied,
+    markJobAsApplied,
   }
 })

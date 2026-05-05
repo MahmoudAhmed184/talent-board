@@ -45,3 +45,9 @@ export interface UpdateCandidateProfilePayload {
   skills?: string[]
   default_resume_id?: number | null
 }
+export interface ApplicationSubmissionResponse {
+  job_title: string
+  company_name: string
+  status: string
+  submitted_at: string
+}

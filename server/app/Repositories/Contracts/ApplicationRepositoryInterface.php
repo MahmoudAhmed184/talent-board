@@ -30,4 +30,11 @@ interface ApplicationRepositoryInterface
     public function update(Application $application, array $attributes): Application;
 
     public function cancel(Application $application): Application;
+
+    public function hasApplied(User $candidate, int $jobListingId): bool;
+
+    /**
+     * @return array<int>
+     */
+    public function getAppliedJobIds(User $candidate): array;
 }

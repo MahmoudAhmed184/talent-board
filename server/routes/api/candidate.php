@@ -13,4 +13,5 @@ Route::post('/resumes', [ResumeController::class, 'store']);
 Route::delete('/resumes/{resume}', [ResumeController::class, 'destroy']);
 
 Route::get('/applications', [ApplicationController::class, 'index']);
+Route::get('/applications/applied-ids', [ApplicationController::class, 'appliedJobIds']);
 Route::delete('/applications/{application}', [ApplicationController::class, 'cancel']);

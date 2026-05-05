@@ -8,8 +8,16 @@ import {
   formatPostedDate,
 } from '../utils/formatters'
 import { useAuthStore } from '../../auth/stores/useAuthStore'
+import { useCandidateApplicationsStore } from '../../candidate/stores/useCandidateApplicationsStore'
+import { computed } from 'vue'
 
 const authStore = useAuthStore()
+const applicationStore = useCandidateApplicationsStore()
+
+const isApplied = computed(() => {
+  if (authStore.user?.role !== 'candidate') return false
+  return applicationStore.isJobApplied(job.id)
+})
 
 const { job, hideApply = false } = defineProps<{
   job: PublicJobSummary
@@ -70,10 +78,16 @@ const emit = defineEmits<{
         <button
           v-else-if="!hideApply"
           @click="emit('apply', job)"
-          class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-5 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors shadow-sm gap-2"
+          :disabled="isApplied"
+          class="inline-flex items-center justify-center rounded-lg px-5 py-2 text-sm font-medium transition-colors shadow-sm gap-2"
+          :class="[
+            isApplied 
+              ? 'bg-slate-100 text-slate-500 border border-slate-200 cursor-not-allowed' 
+              : 'bg-emerald-600 text-white hover:bg-emerald-700'
+          ]"
         >
-          Apply Now
-          <Send class="w-4 h-4" />
+          {{ isApplied ? 'Applied' : 'Apply Now' }}
+          <Send v-if="!isApplied" class="w-4 h-4" />
         </button>
       </div>
     </div>

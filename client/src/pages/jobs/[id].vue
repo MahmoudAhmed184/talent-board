@@ -43,7 +43,7 @@ const jobId = computed(() => {
 
 const hasApplied = computed(() => {
   if (authStore.user?.role !== 'candidate') return false
-  return applicationStore.applications.some(app => String(app.job_listing_id) === jobId.value)
+  return applicationStore.isJobApplied(jobId.value)
 })
 
 async function fetchResumes() {
@@ -86,7 +86,7 @@ onMounted(async () => {
     await Promise.all([
       profileStore.loadProfile(),
       fetchResumes(),
-      applicationStore.loadPage(1)
+      applicationStore.fetchAppliedJobIds()
     ])
   }
 })
@@ -115,16 +115,24 @@ async function doSubmitApplication() {
   if (!jobId.value) return
 
   try {
-    await submitApplication(jobId.value, {
+    const response = await submitApplication(jobId.value, {
       submission_mode: submissionMode.value,
       resume_id: submissionMode.value === 'resume' ? selectedResumeId.value : null,
       use_profile_contact: useProfileContact.value,
       cover_letter: coverLetter.value || null,
     })
     
-    showSuccess('Application submitted successfully!')
+    // Optimistic update
+    applicationStore.markJobAsApplied(jobId.value)
+    
+    const data = response
+    showSuccess(`Your application to ${data.job_title} has been submitted successfully.`)
+    
     isModalOpen.value = false
-    router.push('/candidate/applications')
+    // Delay redirect slightly to let user see the button change if they don't redirect immediately
+    setTimeout(() => {
+      router.push('/candidate/applications')
+    }, 1500)
   } catch (e: any) {
     showError(e.response?.data?.message || 'Failed to submit application.')
   }
@@ -182,6 +190,7 @@ async function doSubmitApplication() {
       v-else
       :job="selectedJob"
       :has-applied="hasApplied"
+      :is-applying="isSubmitting"
       @apply="handleApplyClick"
     />
 

@@ -31,9 +31,15 @@ export function useCandidateApplications() {
     }
   }
 
+  async function fetchAppliedJobIds(): Promise<number[]> {
+    const response = await http.get<{ data: number[] }>('/api/v1/candidate/applications/applied-ids')
+    return response.data.data
+  }
+
   return {
     cancelApplication,
     fetchApplications,
+    fetchAppliedJobIds,
     isCancelling,
   }
 }

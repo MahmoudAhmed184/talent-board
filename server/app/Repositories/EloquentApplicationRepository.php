@@ -89,4 +89,23 @@ class EloquentApplicationRepository implements ApplicationRepositoryInterface
 
         return $application->refresh()->loadMissing(['jobListing', 'jobListing.employer', 'jobListing.employer.employerProfile']);
     }
+
+    public function hasApplied(User $candidate, int $jobListingId): bool
+    {
+        return Application::query()
+            ->where('candidate_id', $candidate->id)
+            ->where('job_listing_id', $jobListingId)
+            ->exists();
+    }
+
+    /**
+     * @return array<int>
+     */
+    public function getAppliedJobIds(User $candidate): array
+    {
+        return Application::query()
+            ->where('candidate_id', $candidate->id)
+            ->pluck('job_listing_id')
+            ->toArray();
+    }
 }

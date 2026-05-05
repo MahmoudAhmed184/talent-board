@@ -14,6 +14,7 @@ use App\Repositories\Contracts\ApplicationRepositoryInterface;
 use App\Repositories\Contracts\CandidateProfileRepositoryInterface;
 use App\Repositories\Contracts\ResumeRepositoryInterface;
 use App\Services\ApplicationService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -43,11 +44,28 @@ class ApplicationController extends Controller
         );
     }
 
-    public function store(StoreApplicationRequest $request, JobListing $jobListing): CandidateApplicationResource
+    public function appliedJobIds(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        
+        return response()->json([
+            'data' => $this->applications->getAppliedJobIds($user)
+        ]);
+    }
+
+    public function store(StoreApplicationRequest $request, JobListing $jobListing): JsonResponse
     {
         /** @var User $user */
         $user = $request->user();
         $this->authorize('create', Application::class);
+
+        // Check for duplicate application
+        if ($this->applications->hasApplied($user, $jobListing->id)) {
+            return response()->json([
+                'message' => 'You have already applied to this job.'
+            ], 422);
+        }
 
         $validated = $request->validated();
         
@@ -79,7 +97,15 @@ class ApplicationController extends Controller
 
         NotifyEmployerOfApplication::dispatch($application)->onQueue('notifications');
 
-        return new CandidateApplicationResource($application);
+        return response()->json([
+            'message' => 'Application submitted successfully',
+            'data' => [
+                'job_title' => $jobListing->title,
+                'company_name' => $jobListing->employer?->employerProfile?->company_name ?? 'Company',
+                'status' => $application->status->value,
+                'submitted_at' => $application->submitted_at?->toIso8601String(),
+            ]
+        ]);
     }
 
     public function cancel(Request $request, Application $application): CandidateApplicationResource
