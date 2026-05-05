@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
-import { Briefcase, MapPin, DollarSign, Search as SearchIcon, Send, X, FileText, CheckCircle } from 'lucide-vue-next'
+import { Briefcase, FileText, CheckCircle } from 'lucide-vue-next'
 import { useJobSearch } from '../../composables/useJobSearch'
-import { formatSalaryRange, formatPostedDate, sentenceCase, descriptionSnippet } from '../../features/jobs/utils/formatters'
 import Pagination from '../../components/Pagination.vue'
 import AppModal from '../../components/AppModal.vue'
+import SearchFilters from '../../components/SearchFilters.vue'
+import JobCard from '../../features/jobs/components/JobCard.vue'
 import { useToast } from '../../composables/useToast'
 import { http } from '../../http'
 import { useCandidateProfileStore } from '../../features/candidate/stores/useCandidateProfileStore'
@@ -15,7 +16,6 @@ const {
   paginationMeta,
   isListLoading,
   executeSearch,
-  store: searchStore,
 } = useJobSearch()
 
 const profileStore = useCandidateProfileStore()
@@ -76,110 +76,55 @@ async function submitApplication() {
     isSubmitting.value = false
   }
 }
-
-function onSearchInput(e: Event) {
-  const target = e.target as HTMLInputElement
-  searchStore.searchQuery = target.value
-  executeSearch(1)
-}
 </script>
 
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Browse Jobs</h1>
-        <p class="mt-1 text-sm text-slate-500">Discover and apply to your next great opportunity.</p>
-      </div>
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900">Browse Jobs</h1>
+      <p class="mt-1 text-sm text-slate-500">Discover and apply to your next great opportunity.</p>
+    </div>
 
-      <div class="flex items-center gap-3">
-        <div class="relative w-full sm:w-64">
-          <SearchIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search jobs..."
-            :value="searchStore.searchQuery"
-            @input="onSearchInput"
-            class="w-full pl-9 pr-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 shadow-sm transition-all"
-          >
+    <!-- Layout: Sidebar Filters + Job List -->
+    <div class="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8 items-start">
+      
+      <!-- Filters Sidebar -->
+      <SearchFilters @search="executeSearch(1)" class="sticky top-24" />
+      
+      <!-- Job List Column -->
+      <div class="space-y-4">
+        
+        <div v-if="isListLoading" class="grid gap-4">
+          <div v-for="i in 3" :key="i" class="h-40 animate-pulse rounded-xl border border-slate-200 bg-white"></div>
         </div>
-      </div>
-    </div>
+        
+        <div v-else-if="jobs.length === 0" class="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
+          <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Briefcase class="w-8 h-8 text-slate-400" />
+          </div>
+          <h3 class="text-lg font-semibold text-slate-900">No jobs found</h3>
+          <p class="text-slate-500 mt-2 text-sm max-w-sm mx-auto">Try adjusting your search filters to find what you're looking for.</p>
+        </div>
 
-    <!-- Job List -->
-    <div v-if="isListLoading" class="grid gap-4">
-      <div v-for="i in 3" :key="i" class="h-40 animate-pulse rounded-xl border border-slate-200 bg-white"></div>
-    </div>
-    
-    <div v-else-if="jobs.length === 0" class="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
-      <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-        <Briefcase class="w-8 h-8 text-slate-400" />
-      </div>
-      <h3 class="text-lg font-semibold text-slate-900">No jobs found</h3>
-      <p class="text-slate-500 mt-2 text-sm max-w-sm mx-auto">Try adjusting your search criteria to find what you're looking for.</p>
-    </div>
-
-    <div v-else class="grid gap-4">
-      <div
-        v-for="job in jobs"
-        :key="job.id"
-        class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all"
-      >
-        <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-2 text-xs font-semibold uppercase tracking-wider text-emerald-600">
-              <span>{{ job.employer?.company_name || 'Company' }}</span>
-              <span class="text-slate-300">&bull;</span>
-              <span>{{ job.category || 'General' }}</span>
-            </div>
-            
-            <h2 class="text-xl font-bold text-slate-900 truncate mb-2">
-              {{ job.title }}
-            </h2>
-            
-            <p class="text-sm text-slate-600 line-clamp-2 mb-4">
-              {{ descriptionSnippet(job.description) }}
-            </p>
-            
-            <div class="flex flex-wrap gap-2 text-xs font-medium text-slate-600">
-              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 border border-slate-100">
-                <MapPin class="w-3.5 h-3.5 text-slate-400" />
-                {{ job.location || 'Remote' }}
-              </span>
-              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 border border-slate-100">
-                <Briefcase class="w-3.5 h-3.5 text-slate-400" />
-                {{ sentenceCase(job.work_type) }}
-              </span>
-              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 border border-slate-100">
-                <DollarSign class="w-3.5 h-3.5 text-slate-400" />
-                {{ formatSalaryRange(job.salary_min, job.salary_max) }}
-              </span>
-            </div>
+        <div v-else class="grid gap-4">
+          <div
+            v-for="job in jobs"
+            :key="job.id"
+            class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all"
+          >
+            <JobCard :job="job" @apply="openApplyModal" />
           </div>
           
-          <div class="flex flex-row lg:flex-col items-center lg:items-end justify-between shrink-0 gap-4">
-            <p class="text-xs text-slate-500 font-medium">{{ formatPostedDate(job.published_at) }}</p>
-            <div class="flex gap-2">
-              <button
-                @click="openApplyModal(job)"
-                class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-5 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors shadow-sm gap-2"
-              >
-                Apply Now
-                <Send class="w-4 h-4" />
-              </button>
-            </div>
+          <div v-if="paginationMeta && paginationMeta.last_page > 1" class="mt-4 flex justify-center">
+            <Pagination
+              :links="paginationLinks"
+              :meta="paginationMeta"
+              :disabled="isListLoading"
+              @page-change="executeSearch"
+            />
           </div>
         </div>
-      </div>
-      
-      <div v-if="paginationMeta && paginationMeta.last_page > 1" class="mt-4 flex justify-center">
-        <Pagination
-          :links="paginationLinks"
-          :meta="paginationMeta"
-          :disabled="isListLoading"
-          @page-change="executeSearch"
-        />
       </div>
     </div>
 

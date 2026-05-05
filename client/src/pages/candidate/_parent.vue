@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useAuthStore } from '../../../features/auth/stores/useAuthStore'
+import { useAuthStore } from '../../features/auth/stores/useAuthStore'
 import {
   LayoutDashboard,
   FileText,
@@ -125,7 +125,16 @@ async function handleLogout() {
       <!-- Page Content -->
       <div class="flex-1 overflow-auto">
         <div class="max-w-5xl mx-auto p-4 md:p-8">
-          <RouterView />
+          <RouterView v-slot="{ Component, route }">
+            <Suspense>
+              <component :is="Component" :key="route.path" />
+              <template #fallback>
+                <div class="flex items-center justify-center py-32">
+                  <div class="size-12 rounded-full border-4 border-slate-200 border-t-emerald-600 animate-spin" />
+                </div>
+              </template>
+            </Suspense>
+          </RouterView>
         </div>
       </div>
     </main>

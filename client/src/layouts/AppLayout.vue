@@ -2,11 +2,12 @@
 import { computed } from 'vue'
 import ToastHost from '../components/ToastHost.vue'
 import { useAuthStore } from '../features/auth/stores/useAuthStore'
+import { LogOut } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
 const dashboardPath = computed(() => {
   if (authStore.role === 'candidate') {
-    return '/candidate/dashboard'
+    return '/candidate'
   }
 
   if (authStore.role === 'employer') {
@@ -19,10 +20,17 @@ const dashboardPath = computed(() => {
 
   return '/'
 })
+
+const jobsPath = computed(() => {
+  if (authStore.role === 'candidate') {
+    return '/candidate/jobs'
+  }
+  return '/jobs'
+})
 </script>
 
 <template>
-  <div class="min-h-svh bg-slate-50 text-slate-950">
+  <div class="min-h-svh bg-slate-50 text-slate-900">
     <ToastHost />
 
     <div
@@ -34,21 +42,22 @@ const dashboardPath = computed(() => {
       <div class="h-full w-1/3 animate-pulse bg-emerald-600" />
     </div>
 
-    <header class="sticky top-0 z-40 border-b border-white/5 bg-slate-950/80 backdrop-blur-xl">
+    <!-- Top Navbar Light Theme -->
+    <header class="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm backdrop-blur-xl">
       <nav
         class="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-4 px-4 md:px-8"
         aria-label="Global"
       >
         <RouterLink to="/" class="group flex items-center gap-2">
-          <div class="size-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 shadow-lg shadow-emerald-500/20 flex items-center justify-center text-white font-bold text-xl">T</div>
-          <span class="text-xl font-bold tracking-tight text-white group-hover:text-emerald-400 transition-colors">TalentBoard</span>
+          <div class="size-9 rounded-xl bg-emerald-600 shadow-sm shadow-emerald-500/20 flex items-center justify-center text-white font-bold text-xl">T</div>
+          <span class="text-xl font-bold tracking-tight text-slate-900 group-hover:text-emerald-700 transition-colors">TalentBoard</span>
         </RouterLink>
 
         <div class="flex items-center gap-6">
           <RouterLink
-            to="/jobs"
-            class="text-sm font-medium text-slate-400 hover:text-white transition-colors"
-            active-class="text-emerald-400"
+            :to="jobsPath"
+            class="text-sm font-medium text-slate-600 hover:text-emerald-700 transition-colors"
+            active-class="text-emerald-600 font-semibold"
           >
             Find Jobs
           </RouterLink>
@@ -56,31 +65,34 @@ const dashboardPath = computed(() => {
           <template v-if="authStore.isAuthenticated">
             <RouterLink
               :to="dashboardPath"
-              class="text-sm font-medium text-slate-400 hover:text-white transition-colors"
-              active-class="text-emerald-400"
+              class="text-sm font-medium text-slate-600 hover:text-emerald-700 transition-colors"
+              active-class="text-emerald-600 font-semibold"
             >
               Dashboard
             </RouterLink>
 
-            <div class="h-6 w-px bg-white/10" />
+            <div class="h-6 w-px bg-slate-200" />
             
             <div class="flex items-center gap-4">
               <div class="hidden md:flex flex-col items-end">
-                <span class="text-sm font-semibold text-white">{{ authStore.user?.name }}</span>
+                <span class="text-sm font-semibold text-slate-900">{{ authStore.user?.name }}</span>
                 <span class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">{{ authStore.role }}</span>
               </div>
               
               <div class="relative group">
-                <button class="size-10 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center hover:border-emerald-500/50 transition-all overflow-hidden">
-                  <div class="text-emerald-400 font-bold">{{ authStore.user?.name?.[0] }}</div>
+                <button class="size-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center hover:border-emerald-500 transition-all overflow-hidden text-emerald-700 font-bold">
+                  {{ authStore.user?.name?.[0] }}
                 </button>
                 
                 <!-- Dropdown -->
-                <div class="absolute right-0 mt-2 w-48 origin-top-right rounded-xl bg-slate-900 border border-white/10 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 py-1">
-                  <RouterLink :to="dashboardPath" class="block px-4 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white">Dashboard</RouterLink>
-                  <RouterLink v-if="authStore.role === 'candidate'" to="/candidate/profile" class="block px-4 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white">My Profile</RouterLink>
-                  <div class="h-px bg-white/5 my-1" />
-                  <button @click="authStore.logout()" class="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10">Sign Out</button>
+                <div class="absolute right-0 mt-2 w-48 origin-top-right rounded-xl bg-white border border-slate-100 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 py-1">
+                  <RouterLink :to="dashboardPath" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900">Dashboard</RouterLink>
+                  <RouterLink v-if="authStore.role === 'candidate'" to="/candidate/profile" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900">My Profile</RouterLink>
+                  <div class="h-px bg-slate-100 my-1" />
+                  <button @click="authStore.logout()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                    <LogOut class="w-4 h-4" />
+                    Sign Out
+                  </button>
                 </div>
               </div>
             </div>
@@ -89,13 +101,13 @@ const dashboardPath = computed(() => {
           <template v-else-if="!authStore.isSessionLoading">
             <RouterLink
               to="/auth/login"
-              class="text-sm font-medium text-slate-400 hover:text-white transition-colors"
+              class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
             >
               Log in
             </RouterLink>
             <RouterLink
               to="/auth/register"
-              class="inline-flex h-10 items-center justify-center rounded-full bg-emerald-600 px-6 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-500 transition-all active:scale-95"
+              class="inline-flex h-10 items-center justify-center rounded-lg bg-emerald-600 px-6 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition-all active:scale-95"
             >
               Join Now
             </RouterLink>
@@ -110,7 +122,7 @@ const dashboardPath = computed(() => {
           <component :is="Component" />
           <template #fallback>
             <div class="flex items-center justify-center py-32">
-              <div class="size-12 rounded-full border-4 border-slate-800 border-t-emerald-500 animate-spin" />
+              <div class="size-12 rounded-full border-4 border-slate-200 border-t-emerald-600 animate-spin" />
             </div>
           </template>
         </Suspense>
