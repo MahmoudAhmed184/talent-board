@@ -21,7 +21,7 @@ class JobListingPolicy
     public function view(User $user, JobListing $jobListing): bool
     {
         return $user->role === UserRole::Employer
-            && $jobListing->employer_id === $user->id;
+            && $jobListing->employer_user_id === $user->id;
     }
 
     public function update(User $user, JobListing $jobListing): bool

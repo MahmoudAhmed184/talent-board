@@ -44,6 +44,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/admin/jobs/': RouteRecordInfo<
+      '/admin/jobs/',
+      '/admin/jobs',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/auth/login': RouteRecordInfo<
       '/auth/login',
       '/auth/login',
@@ -157,12 +164,19 @@ declare module 'vue-router/auto-routes' {
     'src/pages/admin/_parent.vue': {
       routes:
         | '/admin/'
+        | '/admin/jobs/'
       views:
         | 'default'
     }
     'src/pages/admin/index.vue': {
       routes:
         | '/admin/'
+      views:
+        | never
+    }
+    'src/pages/admin/jobs/index.vue': {
+      routes:
+        | '/admin/jobs/'
       views:
         | never
     }

@@ -10,6 +10,7 @@ export const useSearchStore = defineStore('search', () => {
   const salary_min = ref<number | null>(null)
   const salary_max = ref<number | null>(null)
   const posted_after = ref<string | null>(null)
+  const posted_before = ref<string | null>(null)
   const page = ref(1)
 
   const activeFiltersCount = computed(() => {
@@ -22,6 +23,7 @@ export const useSearchStore = defineStore('search', () => {
     if (salary_min.value !== null) count++
     if (salary_max.value !== null) count++
     if (posted_after.value) count++
+    if (posted_before.value) count++
     return count
   })
 
@@ -34,6 +36,7 @@ export const useSearchStore = defineStore('search', () => {
     salary_min.value = null
     salary_max.value = null
     posted_after.value = null
+    posted_before.value = null
     page.value = 1
   }
 
@@ -50,6 +53,7 @@ export const useSearchStore = defineStore('search', () => {
     salary_min,
     salary_max,
     posted_after,
+    posted_before,
     page,
     activeFiltersCount,
     resetFilters,

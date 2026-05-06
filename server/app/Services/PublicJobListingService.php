@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\JobListing;
 use App\Repositories\Contracts\JobListingRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Cache;
 
 class PublicJobListingService
 {

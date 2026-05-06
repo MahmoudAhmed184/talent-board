@@ -76,7 +76,7 @@ class AuthService
 
         $this->startSession($user, $request);
 
-        return $user->refresh();
+        return $user->refresh()->loadMissing('employerProfile');
     }
 
     public function logout(Request $request): void
@@ -106,7 +106,7 @@ class AuthService
             throw new AuthenticationException;
         }
 
-        return $user;
+        return $user->loadMissing('employerProfile');
     }
 
     private function startSession(User $user, Request $request): void

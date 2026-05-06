@@ -6,7 +6,7 @@ import { Briefcase, MapPin, DollarSign, ArrowRight } from 'lucide-vue-next'
 import { sentenceCase, formatSalaryRange } from '../features/jobs/utils/formatters'
 
 const authStore = useAuthStore()
-const { jobs, isListLoading, loadJobs } = usePublicJobs()
+const { jobs, formError, isListLoading, loadJobs } = usePublicJobs()
 
 const featuredJobs = computed(() => jobs.value.slice(0, 4))
 const dashboardPath = computed(() => {
@@ -119,7 +119,23 @@ onMounted(async () => {
         <div v-for="index in 4" :key="index" class="h-24 animate-pulse rounded-xl border border-slate-100 bg-slate-50" />
       </div>
 
-      <ul v-else class="grid gap-4" aria-label="Featured job listings">
+      <div
+        v-else-if="formError"
+        class="rounded-md border border-dashed border-red-200 bg-red-50 px-4 py-8 text-center"
+        role="alert"
+      >
+        <p class="text-sm font-semibold text-slate-900">Unable to load featured jobs</p>
+        <p class="mt-1 text-sm text-red-700">{{ formError }}</p>
+        <button
+          type="button"
+          class="mt-4 inline-flex h-10 items-center justify-center rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          @click="loadJobs({ per_page: 4 })"
+        >
+          Retry
+        </button>
+      </div>
+
+      <ul v-else class="grid gap-3" aria-label="Featured job listings">
         <li v-for="job in featuredJobs" :key="job.id">
           <RouterLink
             :to="`/jobs/${job.id}`"

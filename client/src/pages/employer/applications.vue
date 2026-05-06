@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import ApplicationStatusBadge from '../../components/ApplicationStatusBadge.vue'
+import Pagination from '../../components/Pagination.vue'
 import { useEmployerApplications } from '../../composables/useEmployerApplications'
 import { useEcho, type ApplicationStatusChangedPayload } from '../../composables/useEcho'
 import { useAuthStore } from '../../features/auth/stores/useAuthStore'
@@ -10,6 +11,8 @@ const authStore = useAuthStore()
 const echo = useEcho()
 const {
   list,
+  paginationLinks,
+  paginationMeta,
   selected,
   isLoading,
   isDetailLoading,
@@ -42,8 +45,18 @@ async function decide(decision: 'accepted' | 'rejected') {
   }
 }
 
+async function changePage(page: number) {
+  await loadList(page)
+  const firstItem = list.value[0]
+  if (firstItem) {
+    await loadDetail(firstItem.id)
+  }
+}
+
 onMounted(async () => {
   if (authStore.user?.id) {
+    await echo.prepareRealtimeAuth().catch(() => undefined)
+
     echo.subscribePrivate<ApplicationStatusChangedPayload>(
       `application-status.employer.${authStore.user.id}`,
       '.ApplicationStatusChanged',
@@ -78,7 +91,7 @@ onMounted(async () => {
         <button
           type="button"
           class="inline-flex h-8 w-fit items-center justify-center rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-          @click="loadList"
+          @click="loadList()"
         >
           Retry
         </button>
@@ -111,6 +124,13 @@ onMounted(async () => {
           </button>
         </li>
       </ul>
+
+      <Pagination
+        :links="paginationLinks"
+        :meta="paginationMeta"
+        :disabled="isLoading"
+        @page-change="changePage"
+      />
     </aside>
 
     <article class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">

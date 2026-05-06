@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref } from 'vue'
 import { Briefcase, FileText, CheckCircle } from 'lucide-vue-next'
 import { useJobSearch } from '../../composables/useJobSearch'
 import Pagination from '../../components/Pagination.vue'
@@ -42,8 +42,6 @@ onMounted(async () => {
   await profileStore.loadProfile()
   await applicationStore.fetchAppliedJobIds()
 })
-
-const hasDefaultResume = computed(() => !!profileStore.defaultResumeId)
 
 async function openApplyModal(job: any) {
   selectedJob.value = job

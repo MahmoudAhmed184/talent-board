@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue';
+import { computed, onMounted, watch } from 'vue';
 import {
   useEmployerJobForm,
   type EmployerJobFormData,
   type EmployerJobPayload,
 } from '../../composables/useEmployerJobForm';
+import { useTaxonomies } from '../../composables/useTaxonomies';
 
 const {
   mode = 'create',
@@ -34,6 +35,7 @@ const form = useEmployerJobForm({
     emit('submit', payload);
   },
 });
+const { categories, locations, isLoading, loadTaxonomies } = useTaxonomies();
 
 watch(
   () => initialValues,
@@ -56,6 +58,10 @@ const submitForm = async (): Promise<void> => {
   await form.submit();
 };
 const formIsSubmitting = computed(() => form.isSubmitting.value);
+
+onMounted(() => {
+  loadTaxonomies();
+});
 </script>
 
 <template>
@@ -163,43 +169,53 @@ const formIsSubmitting = computed(() => form.isSubmitting.value);
       <div class="field-grid">
         <div class="field">
           <label for="job-location">Location</label>
-          <input
+          <select
             id="job-location"
-            v-model="form.values.location"
-            type="text"
-            :aria-invalid="Boolean(form.getFieldError('location'))"
+            v-model="form.values.locationId"
+            :disabled="isLoading"
+            :aria-invalid="Boolean(form.getFieldError('locationId'))"
             :aria-describedby="
-              form.getFieldError('location') ? 'job-location-error' : undefined
+              form.getFieldError('locationId') ? 'job-location-error' : undefined
             "
-          />
+          >
+            <option value="">Select location</option>
+            <option v-for="location in locations" :key="location.id" :value="String(location.id)">
+              {{ location.name }}
+            </option>
+          </select>
           <p
-            v-if="form.getFieldError('location')"
+            v-if="form.getFieldError('locationId')"
             id="job-location-error"
             class="field-error"
             role="alert"
           >
-            {{ form.getFieldError('location') }}
+            {{ form.getFieldError('locationId') }}
           </p>
         </div>
 
         <div class="field">
           <label for="job-category">Category</label>
-          <input
+          <select
             id="job-category"
-            v-model="form.values.category"
-            type="text"
-            :aria-invalid="Boolean(form.getFieldError('category'))"
+            v-model="form.values.categoryId"
+            :disabled="isLoading"
+            :aria-invalid="Boolean(form.getFieldError('categoryId'))"
             :aria-describedby="
-              form.getFieldError('category') ? 'job-category-error' : undefined
+              form.getFieldError('categoryId') ? 'job-category-error' : undefined
             "
-          />
+          >
+            <option value="">Select category</option>
+            <option v-for="category in categories" :key="category.id" :value="String(category.id)">
+              {{ category.name }}
+            </option>
+          </select>
           <p
-            v-if="form.getFieldError('category')"
+            v-if="form.getFieldError('categoryId')"
             id="job-category-error"
             class="field-error"
             role="alert"
           >
-            {{ form.getFieldError('category') }}
+            {{ form.getFieldError('categoryId') }}
           </p>
         </div>
       </div>

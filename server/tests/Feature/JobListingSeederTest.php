@@ -61,11 +61,12 @@ test('job listing seeder imports jobs from the Himalayas API', function () {
         ->and(EmployerProfile::query()->where('company_name', 'Remote API Co')->exists())->toBeTrue();
 
     $job = JobListing::query()->where('title', 'Senior Laravel Engineer')->firstOrFail();
+    $job->loadMissing(['location']);
 
     expect($job->approval_status)->toBe('approved')
         ->and($job->work_type)->toBe('remote')
         ->and($job->experience_level)->toBe('senior')
-        ->and($job->location)->toBe('Remote - United States')
+        ->and($job->location?->name)->toBe('Remote - United States')
         ->and($job->description)->toContain('Source: Himalayas https://himalayas.app/jobs/example');
 });
 

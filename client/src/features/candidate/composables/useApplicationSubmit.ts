@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { http } from '../../../http'
-import type { CandidateApplication, ApplicationSubmissionResponse } from '../types'
+import type { ApplicationSubmissionResponse } from '../types'
 
 export interface SubmitApplicationPayload {
   submission_mode: 'resume' | 'contact'

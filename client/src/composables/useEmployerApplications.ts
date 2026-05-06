@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue'
 import { http } from '../http'
 import { useFormErrors, type ApiErrorPayload } from './useFormErrors'
+import type { JsonApiPaginatedResponse, JsonApiPaginationLinks, JsonApiPaginationMeta } from '../types/pagination'
 
 type ApplicationStatus = 'submitted' | 'under_review' | 'accepted' | 'rejected' | 'cancelled'
 type EmployerDecision = 'accepted' | 'rejected'
@@ -22,8 +23,6 @@ export interface EmployerApplicationItem {
     email: string | null
   }
   resume: {
-    disk: string | null
-    path: string | null
     original_name: string | null
   }
   submitted_at: string | null
@@ -34,17 +33,37 @@ export interface EmployerApplicationItem {
   }
 }
 
-interface CollectionResponse<TData> {
-  data: TData[]
-}
+type CollectionResponse<TData> = JsonApiPaginatedResponse<TData>
 
 interface SingleResponse<TData> {
   data: TData
 }
 
+function emptyLinks(): JsonApiPaginationLinks {
+  return {
+    first: null,
+    last: null,
+    next: null,
+    prev: null,
+  }
+}
+
+function emptyMeta(): JsonApiPaginationMeta {
+  return {
+    current_page: 1,
+    from: null,
+    last_page: 1,
+    per_page: 15,
+    to: null,
+    total: 0,
+  }
+}
+
 export function useEmployerApplications() {
   const list = ref<EmployerApplicationItem[]>([])
   const selected = ref<EmployerApplicationItem | null>(null)
+  const paginationLinks = ref<JsonApiPaginationLinks>(emptyLinks())
+  const paginationMeta = ref<JsonApiPaginationMeta>(emptyMeta())
   const isLoading = ref(false)
   const isDetailLoading = ref(false)
   const isUpdatingStatus = ref(false)
@@ -56,18 +75,23 @@ export function useEmployerApplications() {
 
   const isEmpty = computed(() => !isLoading.value && list.value.length === 0)
 
-  async function loadList(): Promise<void> {
+  async function loadList(page = 1): Promise<void> {
     clearErrors()
     isLoading.value = true
 
     try {
       const response = await http.get<CollectionResponse<EmployerApplicationItem>>(
         '/api/v1/employer/applications',
+        { params: { page } },
       )
       list.value = response.data.data
+      paginationLinks.value = response.data.links
+      paginationMeta.value = response.data.meta
     } catch (error) {
       mapApiErrors(error as ApiErrorPayload)
       list.value = []
+      paginationLinks.value = emptyLinks()
+      paginationMeta.value = emptyMeta()
     } finally {
       isLoading.value = false
     }
@@ -145,6 +169,8 @@ export function useEmployerApplications() {
   return {
     list,
     selected,
+    paginationLinks,
+    paginationMeta,
     isLoading,
     isDetailLoading,
     isUpdatingStatus,

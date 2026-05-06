@@ -13,7 +13,7 @@ class EloquentApplicationRepository implements ApplicationRepositoryInterface
     public function paginateForEmployer(User $employer, int $perPage, ?ApplicationStatus $status): LengthAwarePaginator
     {
         return Application::query()
-            ->with(['candidate:id,name,email', 'jobListing:id,title,employer_id'])
+            ->with(['candidate:id,name,email', 'jobListing:id,title,employer_user_id'])
             ->where('employer_id', $employer->id)
             ->when($status, fn ($query) => $query->where('status', $status->value))
             ->latest('submitted_at')
@@ -24,7 +24,7 @@ class EloquentApplicationRepository implements ApplicationRepositoryInterface
     public function findForEmployer(User $employer, Application $application): ?Application
     {
         return Application::query()
-            ->with(['candidate:id,name,email', 'jobListing:id,title,employer_id'])
+            ->with(['candidate:id,name,email', 'jobListing:id,title,employer_user_id'])
             ->whereKey($application->getKey())
             ->where('employer_id', $employer->id)
             ->first();

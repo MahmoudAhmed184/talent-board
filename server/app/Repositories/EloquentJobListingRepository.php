@@ -15,17 +15,20 @@ class EloquentJobListingRepository implements JobListingRepositoryInterface
      */
     public function createForEmployer(User $employer, array $attributes): JobListing
     {
-        return JobListing::query()->create([
+        $jobListing = JobListing::query()->create([
             ...$attributes,
             'employer_user_id' => $employer->id,
             'approval_status' => 'pending',
             'published_at' => null,
         ]);
+
+        return $this->loadRelations($jobListing);
     }
 
     public function paginateForEmployer(User $employer, ?string $status, int $perPage): LengthAwarePaginator
     {
         return JobListing::query()
+            ->with(['employer.employerProfile', 'category', 'location'])
             ->where('employer_user_id', $employer->id)
             ->when($status, fn (Builder $query): Builder => $query->where('approval_status', $status))
             ->latest('updated_at')
@@ -40,7 +43,7 @@ class EloquentJobListingRepository implements JobListingRepositoryInterface
     {
         $jobListing->update($attributes);
 
-        return $jobListing->refresh();
+        return $this->loadRelations($jobListing->refresh());
     }
 
     public function delete(JobListing $jobListing): void
@@ -83,7 +86,7 @@ class EloquentJobListingRepository implements JobListingRepositoryInterface
 
     public function loadEmployer(JobListing $jobListing): JobListing
     {
-        return $jobListing->loadMissing(['employer.employerProfile']);
+        return $this->loadRelations($jobListing);
     }
 
     private function publicQuery(): Builder
@@ -97,5 +100,10 @@ class EloquentJobListingRepository implements JobListingRepositoryInterface
                     ->whereNull('application_deadline')
                     ->orWhere('application_deadline', '>=', now());
             });
+    }
+
+    private function loadRelations(JobListing $jobListing): JobListing
+    {
+        return $jobListing->loadMissing(['employer.employerProfile', 'category', 'location']);
     }
 }

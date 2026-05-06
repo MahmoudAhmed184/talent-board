@@ -6,8 +6,8 @@ export const EMPLOYER_JOB_FIELDS = [
   'description',
   'responsibilities',
   'qualifications',
-  'location',
-  'category',
+  'locationId',
+  'categoryId',
   'workType',
   'experienceLevel',
   'salaryMin',
@@ -22,8 +22,8 @@ export interface EmployerJobFormData {
   description: string;
   responsibilities: string;
   qualifications: string;
-  location: string;
-  category: string;
+  locationId: string;
+  categoryId: string;
   workType: string;
   experienceLevel: string;
   salaryMin: string;
@@ -36,8 +36,8 @@ export interface EmployerJobPayload {
   description: string;
   responsibilities: string | null;
   qualifications: string | null;
-  location: string;
-  category: string;
+  location_id: number;
+  category_id: number;
   work_type: string;
   experience_level: string;
   salary_min: number | null;
@@ -55,8 +55,8 @@ const defaultValues = (): EmployerJobFormData => ({
   description: '',
   responsibilities: '',
   qualifications: '',
-  location: '',
-  category: '',
+  locationId: '',
+  categoryId: '',
   workType: '',
   experienceLevel: '',
   salaryMin: '',
@@ -91,12 +91,22 @@ export function useEmployerJobForm(options: UseEmployerJobFormOptions = {}) {
     if (!values.description.trim()) {
       setFieldError('description', 'Description is required.');
     }
-    if (!values.location.trim()) {
-      setFieldError('location', 'Location is required.');
+    if (!values.locationId.trim()) {
+      setFieldError('locationId', 'Location is required.');
     }
-    if (!values.category.trim()) {
-      setFieldError('category', 'Category is required.');
+    if (!values.categoryId.trim()) {
+      setFieldError('categoryId', 'Category is required.');
     }
+    const locationId = Number(values.locationId);
+    if (!Number.isInteger(locationId) || locationId <= 0) {
+      setFieldError('locationId', 'Select a valid location.');
+    }
+
+    const categoryId = Number(values.categoryId);
+    if (!Number.isInteger(categoryId) || categoryId <= 0) {
+      setFieldError('categoryId', 'Select a valid category.');
+    }
+
     if (!values.workType.trim()) {
       setFieldError('workType', 'Work type is required.');
     }
@@ -118,8 +128,8 @@ export function useEmployerJobForm(options: UseEmployerJobFormOptions = {}) {
     description: values.description.trim(),
     responsibilities: values.responsibilities.trim() || null,
     qualifications: values.qualifications.trim() || null,
-    location: values.location.trim(),
-    category: values.category.trim(),
+    location_id: Number(values.locationId),
+    category_id: Number(values.categoryId),
     work_type: values.workType.trim(),
     experience_level: values.experienceLevel.trim(),
     salary_min: toNullableNumber(values.salaryMin),
@@ -142,6 +152,8 @@ export function useEmployerJobForm(options: UseEmployerJobFormOptions = {}) {
       return true;
     } catch (error) {
       mapApiErrors(error as ApiErrorPayload, {
+        location_id: 'locationId',
+        category_id: 'categoryId',
         work_type: 'workType',
         experience_level: 'experienceLevel',
         salary_min: 'salaryMin',
@@ -168,6 +180,8 @@ export function useEmployerJobForm(options: UseEmployerJobFormOptions = {}) {
     error: ApiErrorPayload,
   ): void => {
     mapApiErrors(error, {
+      location_id: 'locationId',
+      category_id: 'categoryId',
       work_type: 'workType',
       experience_level: 'experienceLevel',
       salary_min: 'salaryMin',

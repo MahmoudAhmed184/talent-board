@@ -11,7 +11,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useAuthStore } from '../../features/auth/stores/useAuthStore'
 import { useAuth } from '../../features/auth/composables/useAuth'
 import {
   LayoutDashboard,
@@ -25,7 +24,6 @@ import {
 
 const route = useRoute()
 const router = useRouter()
-const authStore = useAuthStore()
 const { logout } = useAuth()
 
 const isSidebarOpen = ref(false)
@@ -38,7 +36,11 @@ const navItems = [
 ]
 
 async function handleLogout() {
-  await logout()
+  try {
+    await logout()
+  } catch {
+    // Ensure local session is cleared even if the API call fails
+  }
   router.push('/')
 }
 </script>
