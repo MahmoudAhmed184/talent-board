@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import ToastHost from '../components/ToastHost.vue'
 import { useAuthStore } from '../features/auth/stores/useAuthStore'
 import { useAuth } from '../features/auth/composables/useAuth'
@@ -10,11 +10,36 @@ const router = useRouter()
 const { logout } = useAuth()
 
 const authStore = useAuthStore()
+const isMenuOpen = ref(false)
+const menuRef = ref<HTMLElement | null>(null)
 
 const handleLogout = async () => {
-  await logout()
+  isMenuOpen.value = false
+  try {
+    await logout()
+  } catch {
+    // Ensure local session is cleared even if the API call fails
+  }
   router.push('/')
 }
+
+function toggleMenu() {
+  isMenuOpen.value = !isMenuOpen.value
+}
+
+function handleClickOutside(event: MouseEvent) {
+  if (menuRef.value && !menuRef.value.contains(event.target as Node)) {
+    isMenuOpen.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside, true)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside, true)
+})
 
 const dashboardPath = computed(() => {
   if (authStore.role === 'candidate') {
@@ -90,17 +115,28 @@ const jobsPath = computed(() => {
                 <span class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">{{ authStore.role }}</span>
               </div>
               
-              <div class="relative group">
-                <button class="size-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center hover:border-emerald-500 transition-all overflow-hidden text-emerald-700 font-bold">
+              <div ref="menuRef" class="relative">
+                <button
+                  id="user-menu-button"
+                  @click="toggleMenu"
+                  class="size-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center hover:border-emerald-500 transition-all overflow-hidden text-emerald-700 font-bold"
+                  :aria-expanded="isMenuOpen"
+                  aria-haspopup="true"
+                >
                   {{ authStore.user?.name?.[0] }}
                 </button>
                 
                 <!-- Dropdown -->
-                <div class="absolute right-0 mt-2 w-48 origin-top-right rounded-xl bg-white border border-slate-100 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 py-1">
-                  <RouterLink :to="dashboardPath" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900">Dashboard</RouterLink>
-                  <RouterLink v-if="authStore.role === 'candidate'" to="/candidate/profile" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900">My Profile</RouterLink>
+                <div
+                  v-show="isMenuOpen"
+                  class="absolute right-0 mt-2 w-48 origin-top-right rounded-xl bg-white border border-slate-100 shadow-xl py-1 z-50"
+                  role="menu"
+                  aria-labelledby="user-menu-button"
+                >
+                  <RouterLink :to="dashboardPath" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900" role="menuitem" @click="isMenuOpen = false">Dashboard</RouterLink>
+                  <RouterLink v-if="authStore.role === 'candidate'" to="/candidate/profile" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900" role="menuitem" @click="isMenuOpen = false">My Profile</RouterLink>
                   <div class="h-px bg-slate-100 my-1" />
-                  <button @click="handleLogout" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                  <button @click="handleLogout" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2" role="menuitem">
                     <LogOut class="w-4 h-4" />
                     Sign Out
                   </button>
@@ -141,3 +177,4 @@ const jobsPath = computed(() => {
     </main>
   </div>
 </template>
+

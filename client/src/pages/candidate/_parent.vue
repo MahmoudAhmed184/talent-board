@@ -36,7 +36,11 @@ const navItems = [
 ]
 
 async function handleLogout() {
-  await logout()
+  try {
+    await logout()
+  } catch {
+    // Ensure local session is cleared even if the API call fails
+  }
   router.push('/')
 }
 </script>
